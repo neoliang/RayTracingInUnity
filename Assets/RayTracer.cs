@@ -29,10 +29,10 @@ public class RayTracer : MonoBehaviour
     }
     Color CalLight(Color lightColor,Vector3 lightDir,Color hitColor,Vector3 hitNormal,Vector3 viewDir)
     {
-        var diffuse = Vector3.Dot(hitNormal, -lightDir) * lightColor * hitColor;
+        var diffuse = Mathf.Max( Vector3.Dot(hitNormal, -lightDir),0 )* lightColor * hitColor;
         var V = -viewDir;
-        var R = Vector3.Reflect(hitNormal, lightDir);
-        var spec = Mathf.Pow(Vector3.Dot(V, R), 32) * lightColor * hitColor;
+        var R = Vector3.Reflect(lightDir, hitNormal);
+        var spec = Mathf.Pow(Mathf.Max(Vector3.Dot(V, R),0), 32) * lightColor * hitColor;
         return diffuse + spec;
     }
     static Vector3 GetLightDir(Light l)
@@ -70,7 +70,7 @@ public class RayTracer : MonoBehaviour
             {
                 float x = hitInfo.textureCoord.x * texture.width;
                 float y = hitInfo.textureCoord.y * texture.height;
-                myColor = texture.GetPixel((int)x, (int)y);
+                myColor = texture.GetPixel((int)x, (int)y).linear;
             }
 
             //shadow
@@ -95,7 +95,7 @@ public class RayTracer : MonoBehaviour
             inDirectColor = CalLight(inDirectColor, -nextDir, myColor, hitInfo.normal, ray.direction);
             float reflect = mat.GetFloat("_Glossiness");
             inDirectColor = inDirectColor * (1 - reflect) + mirrorColor * reflect;
-            return 0.2f * myColor  + 0.8f* inDirectColor;
+            return  inDirectColor;
         }
         else
         {
