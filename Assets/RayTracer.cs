@@ -1,7 +1,9 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 public class RayTracer : MonoBehaviour
 {
     public Camera renderCamera;
@@ -23,17 +25,44 @@ public class RayTracer : MonoBehaviour
                 var color = TracingRay(ray);
                 target.SetPixel(x, y, color.gamma);
             }
+#if UNITY_EDITOR
+            if(EditorUtility.DisplayCancelableProgressBar("Tracing", "", y / (float)target.height))
+            {
+                break;
+            }
+#endif
         }
         target.Apply();
         TraceOut.texture = target;
+#if UNITY_EDITOR
+        EditorUtility.ClearProgressBar();
+#endif
     }
-    Color CalLight(Color lightColor,Vector3 lightDir,Color hitColor,Vector3 hitNormal,Vector3 viewDir)
+    Color TracingRay(Ray ray, int currentStep = 0)
+    {
+        if (currentStep >= MaxTraceStep)
+        {
+            return Color.black;
+        }
+        RaycastHit hitInfo;
+        if (Physics.Raycast(ray, out hitInfo))
+        {
+            return RenderHit(ray, hitInfo, currentStep);
+        }
+        else
+        {
+            return renderCamera.backgroundColor.linear;
+        }
+
+    }
+
+    Color CalLight(Color lightColor,Vector3 lightDir,Color hitColor,Vector3 hitNormal,Vector3 viewDir,float reflect)
     {
         var diffuse = Mathf.Max( Vector3.Dot(hitNormal, -lightDir),0 )* lightColor * hitColor;
         var V = -viewDir;
         var R = Vector3.Reflect(lightDir, hitNormal);
         var spec = Mathf.Pow(Mathf.Max(Vector3.Dot(V, R),0), 32) * lightColor * hitColor;
-        return diffuse + spec;
+        return diffuse + spec * reflect;
     }
     static Vector3 GetLightDir(Light l)
     {
@@ -53,54 +82,47 @@ public class RayTracer : MonoBehaviour
         while (dir.sqrMagnitude > 1.0f);
         return dir;
     }
-    Color TracingRay(Ray ray,int currentStep=0)
+
+    //RenderEquation
+    Color RenderHit(Ray ray,RaycastHit hitInfo, int currentStep)
     {
-        if(currentStep >= MaxTraceStep)
+        var mat = hitInfo.transform.GetComponent<MeshRenderer>().sharedMaterial;
+        var myColor = mat.color.linear;
+        var texture = mat.mainTexture as Texture2D;
+        if (texture != null)
         {
-            return Color.gray;
+            float x = hitInfo.textureCoord.x * texture.width;
+            float y = hitInfo.textureCoord.y * texture.height;
+            myColor = texture.GetPixel((int)x, (int)y).linear;
         }
-        RaycastHit hitInfo;
-        if(Physics.Raycast(ray, out hitInfo))
+        float reflect = mat.GetFloat("_Glossiness");
+        var dirColor = Color.black;
+        //shadow
+        for (int i =0;i<lights.Length;++i)
         {
-
-            var mat = hitInfo.transform.GetComponent<MeshRenderer>().sharedMaterial;
-            var myColor = mat.color.linear;
-            var texture = mat.mainTexture as Texture2D;
-            if ( texture !=  null)
+            if(lights[i].isActiveAndEnabled)
             {
-                float x = hitInfo.textureCoord.x * texture.width;
-                float y = hitInfo.textureCoord.y * texture.height;
-                myColor = texture.GetPixel((int)x, (int)y).linear;
+                var lightDir = GetLightDir(lights[i]);
+                if (!Physics.Raycast(hitInfo.point, -lightDir))
+                {
+                    dirColor += CalLight(lights[i].color.linear, lightDir, myColor, hitInfo.normal, ray.direction, reflect);
+                }
             }
 
-            //shadow
-            var lightDir = GetLightDir(lights[0]);
-            if(!Physics.Raycast(hitInfo.point,-lightDir))
-            {
-                myColor = CalLight(lights[0].color,lightDir , myColor, hitInfo.normal, ray.direction);
-            }
-            else
-            {
-                myColor = Color.black;
-            }
-
-            //mirror
-            var nextDir = Vector3.Reflect(ray.direction, hitInfo.normal);
-            var mirrorColor = TracingRay(new Ray(hitInfo.point, nextDir), currentStep + 1);
-            mirrorColor = CalLight(mirrorColor, -nextDir, myColor, hitInfo.normal, ray.direction);
-            //diff
-            nextDir = hitInfo.normal + GenSemSphrereDir();
-            nextDir.Normalize();
-            var inDirectColor = TracingRay(new Ray(hitInfo.point, nextDir), currentStep + 1);
-            inDirectColor = CalLight(inDirectColor, -nextDir, myColor, hitInfo.normal, ray.direction);
-            float reflect = mat.GetFloat("_Glossiness");
-            inDirectColor = inDirectColor * (1 - reflect) + mirrorColor * reflect;
-            return  inDirectColor;
-        }
-        else
-        {
-            return renderCamera.backgroundColor.linear;
         }
 
+
+        //mirror
+        var nextDir = Vector3.Reflect(ray.direction, hitInfo.normal);
+        var mirrorColor = TracingRay(new Ray(hitInfo.point, nextDir), currentStep + 1);
+        mirrorColor = CalLight(mirrorColor, -nextDir, myColor, hitInfo.normal, ray.direction, reflect);
+        //diff
+        nextDir = hitInfo.normal + GenSemSphrereDir();
+        nextDir.Normalize();
+        var inDirectColor = TracingRay(new Ray(hitInfo.point, nextDir), currentStep + 1);
+        inDirectColor = CalLight(inDirectColor, -nextDir, myColor, hitInfo.normal, ray.direction, reflect);
+
+        inDirectColor = inDirectColor * (1 - reflect) + mirrorColor * reflect;
+        return 0.1f * dirColor + 0.9f * inDirectColor;
     }
 }
