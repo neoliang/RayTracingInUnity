@@ -5,6 +5,7 @@ using UnityEditor;
 using UnityEngine.Profiling;
 public class PathTracing : MonoBehaviour
 {
+    public Scene scene;
     readonly float M_PI = Mathf.PI;
     public Camera camera;
     public float PixelSize = 2;
@@ -37,6 +38,11 @@ public class PathTracing : MonoBehaviour
     [ContextMenu("RunTrace")]
     void Run()
     {
+        if(!EditorApplication.isPlaying)
+        {
+            EditorUtility.DisplayDialog("Hit", "Press Play Button First", "ok");
+            return;
+        }
         var tex = new Texture2D(512, 512, TextureFormat.RGB24, false);
         Render(tex, SampleCount);
         tex.Apply();
@@ -47,7 +53,7 @@ public class PathTracing : MonoBehaviour
         Profiler.BeginSample("Render");
         for (int y = 0; y < finalImage.height;++y)
         {
-            //EditorUtility.DisplayCancelableProgressBar("tracing", "", y / (float)finalImage.height);
+            EditorUtility.DisplayCancelableProgressBar("tracing", "", y / (float)finalImage.height);
             for (int x = 0;x < finalImage.width;++x)
             {
                 var color = Color.black;
@@ -66,7 +72,7 @@ public class PathTracing : MonoBehaviour
             }
         }
         Profiler.EndSample();
-        //EditorUtility.ClearProgressBar();
+        EditorUtility.ClearProgressBar();
     }
   
     Color TracePath(Ray ray, int depth)
@@ -75,16 +81,15 @@ public class PathTracing : MonoBehaviour
         {
             return Color.black;  // Bounced enough times.
         }
-        RaycastHit hit;
-        if (Physics.Raycast(ray, out hit) == false)
+        SceneRayHit hit = scene.RayCast(ray);
+        if (hit == null)
         {
             return Color.black;  // Nothing was hit.
         }
         Profiler.BeginSample("GetComponent<MeshRenderer");
-        Material material = hit.transform.GetComponent<MeshRenderer>().sharedMaterial;
         Profiler.EndSample();
         Profiler.BeginSample("GetEmissionColor");
-        var emittance = material.GetColor("_EmissionColor");
+        var emittance = hit.HitObj.Emittance;
         Profiler.EndSample();
         // Pick a random direction from here and keep going.
         // This is NOT a cosine-weighted distribution!
@@ -102,7 +107,7 @@ public class PathTracing : MonoBehaviour
         float cos_theta = Mathf.Max(0, Vector3.Dot(newRay.direction.normalized, hit.normal.normalized));
         Profiler.EndSample();
         Profiler.BeginSample("GetColor");
-        Color BRDF = material.color / M_PI;
+        Color BRDF = hit.HitObj.reflectance / M_PI;
         Profiler.EndSample();
         // Apply the Rendering Equation here.
         var finalColor = emittance + (BRDF * incoming * cos_theta / p);
