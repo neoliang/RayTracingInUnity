@@ -9,7 +9,6 @@ using System.Text;
 public class TestTracingEditor : Editor
 {
 
-
     public static void DirectoryCopy(string sourceDirName, string destDirName, bool copySubDirs)
     {
         // Get the subdirectories for the specified directory.
@@ -92,7 +91,7 @@ public class TestTracingEditor : Editor
         x.Start();
         x.WaitForExit();
         var dt = Time.realtimeSinceStartup - t1;
-        Debug.Log("timePast " + dt.ToString());
+        Debug.LogFormat("sample: {0}  BVH {1} time:{2} ",t.SampleCount,t.useBVH,dt);
         AssetDatabase.ImportAsset(outPath);
     }
     public override void OnInspectorGUI()

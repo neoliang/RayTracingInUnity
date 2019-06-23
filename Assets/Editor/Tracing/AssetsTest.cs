@@ -130,13 +130,7 @@ namespace RT1
             }
             else
             {
-                Array.Sort(finalList, (left, right) =>
-                {
-                    var ab1 = left.BoundVolume(0, 1);
-                    var ab2 = right.BoundVolume(0, 1);
-                    return (int)(ab1._max.x - ab2._min.x);
-                });
-                //return hitlist;
+                //Array.Sort(finalList, new BVHNode.BVHComparer(0));
                 return new BVHNode(finalList, 0, finalList.Length, 0, 1);
             }
         }

@@ -14,6 +14,25 @@ namespace RT1 {
         Hitable _left;
         Hitable _right;
 
+
+        public class BVHComparer : System.Collections.IComparer
+        {
+            static int CmpBVH(Hitable left, Hitable right, int idx)
+            {
+                var ab1 = left.BoundVolume(0, 1);
+                var ab2 = right.BoundVolume(0, 1);
+                return (int)(ab1._max[idx] - ab2._min[idx]);
+            }
+            Func<Hitable, Hitable, int> _cmp = null;
+            public BVHComparer(int idx)
+            {
+                _cmp = (l, r) => CmpBVH(l, r, idx);
+            }
+            public int Compare(object x, object y)
+            {
+                return _cmp((Hitable) x, (Hitable) y);
+            }
+        }
         public BVHNode(Hitable[] list,int low,int high,float t0,float t1)
         {
             if(low <0 || high >list.Length)
@@ -39,6 +58,7 @@ namespace RT1 {
             }
             else
             {
+                Array.Sort(list,low,high-low, new BVHComparer((int)(3 * Exten.rand01())));
                 int mid = (low + high) / 2;
                 _left = new BVHNode(list, low, mid,t0,t1);
                 _right = new BVHNode(list, mid, high,t0,t1);
