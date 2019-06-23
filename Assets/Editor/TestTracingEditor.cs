@@ -58,17 +58,39 @@ public class TestTracingEditor : Editor
         else
             return path;
     }
-    static readonly string root = "C:/Users/feefiliang/source/repos/RT1/RT1/";
-    static readonly string dllPath = root + "bin/Release/netcoreapp2.1/RT1.dll";
-    static readonly string csFile = "Tracing";
+    string root
+    {
+        get
+        {
+            var t = (target as TestTracing);
+            return t.rootPath;
+        }
+    }
+    string dllPath
+    {
+        get
+        {
+            var t = (target as TestTracing);
+            return t.rootPath + t.dllPath;
+        }
+    }
+    string projectName
+    {
+        get
+        {
+            var t = (target as TestTracing);
+            return t.projectName;
+        }
+    }
+    static readonly string fileDir = "Tracing";
     void Compile()
     {
         var p1 = AssetDatabase.GetAssetPath(target);
         p1 = DeletePathLastComponent(p1);
-        DirectoryCopy(p1 + csFile, root,true);
+        DirectoryCopy(p1 + fileDir, root + "/" + fileDir,true);
         System.Diagnostics.Process x = new System.Diagnostics.Process();
-        x.StartInfo.FileName = "dotnet";
-        x.StartInfo.Arguments = string.Format("build {0}/RT1.csproj --configuration Release", root);
+        x.StartInfo.FileName = "/usr/local/share/dotnet/dotnet";
+        x.StartInfo.Arguments = string.Format("build {0}{1} --configuration Release", root,projectName);
         x.StartInfo.StandardOutputEncoding = System.Text.Encoding.ASCII;
         x.StartInfo.RedirectStandardOutput = true;
         x.StartInfo.UseShellExecute = false;
@@ -84,7 +106,7 @@ public class TestTracingEditor : Editor
     {
         var t = (target as TestTracing);
         System.Diagnostics.Process x = new System.Diagnostics.Process();
-        x.StartInfo.FileName = "dotnet";
+        x.StartInfo.FileName = "/usr/local/share/dotnet/dotnet";
         var outPath = AssetDatabase.GetAssetPath(target) + t.fileName;
         x.StartInfo.Arguments = string.Format("{0} {1} {2} {3} {4} {5}", dllPath, t.SampleCount, t.Width, t.Height, outPath,t.useBVH);
         var t1 = Time.realtimeSinceStartup;
