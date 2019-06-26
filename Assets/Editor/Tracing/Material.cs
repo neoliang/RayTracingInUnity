@@ -28,6 +28,18 @@ namespace RT1
             return color;
         }
     }
+    class NoiseTexture : Texture
+    {
+        Noise _noise;
+        public NoiseTexture(Noise n)
+        {
+            _noise = n;
+        }
+        public vec3 sample(float u, float v, vec3 pos)
+        {
+            return new vec3(1,1,1) * _noise.GetValue(pos);
+        }
+    }
     public class CheckTexture : Texture
     {
         vec3 color1;
@@ -39,7 +51,7 @@ namespace RT1
         }
         public vec3 sample(float u, float v, vec3 pos)
         {
-            float r = MathF.Sin(10.0f * pos.x) * MathF.Sin(10.0f * pos.y) * MathF.Sin(10.0f * pos.z);
+            float r = MathF.Sin(20.0f * pos.x) * MathF.Sin(20.0f*pos.y) * MathF.Sin(pos.z*20.0f);
             if(r <0)
             {
                 return color1;

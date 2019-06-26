@@ -88,8 +88,9 @@ namespace RT1
             Hitable[] list = new Hitable[n + 1];
             vec3 black = new vec3(0.1f, 0.1f, 0.2f);
             vec3 white = new vec3(1f, 1f, 1f);
-            var check = new CheckTexture(black, white);
-            list[0] = new Sphere(new vec3(0, -1000, 0), 1000, new Lambertian(check));
+            var check = new CheckTexture(black, white); 
+            var noise = new NoiseTexture(new Noise() );
+            list[0] = new Sphere(new vec3(0, -1000, 0), 1000, new Lambertian(noise));
             int i = 1;
             for (int a = -11; a < 11; a++)
             {
@@ -121,9 +122,9 @@ namespace RT1
 
             list[i++] = new Sphere(new vec3(2, 1, 0), 1.0f, new Dieletric(1.3f));
             list[i++] = new Sphere(new vec3(-3, 1, 2), 1.0f, new Metal(new vec3(0.4f, 0.2f, 0.1f),0.2f));
-            //list[i++] = new Sphere(new vec3(4, 1, 0), 1.0f, new Metal(new vec3(0.7f, 0.6f, 0.5f), 0.0f));
-            list[i++] = new Sphere(new vec3(4, 1, -0.5f), 1.0f, new Metal(new vec3(0.7f, 0.6f, 0.5f), 0.0f));
-            var finalList = list.Where(p => p != null).ToArray();
+            list[i++] = new Sphere(new vec3(4, 1, 0), 1.0f, new Lambertian(check));
+            //list[i++] = new Sphere(new vec3(4, 1, -0.5f), 1.0f, new Metal(new vec3(0.7f, 0.6f, 0.5f), 0.0f));
+            var finalList = list.Take(1).Where(p => p != null).ToArray();
             if (!bvh)
             {
                 return new HitList(finalList);
