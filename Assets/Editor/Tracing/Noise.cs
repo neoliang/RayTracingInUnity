@@ -37,15 +37,22 @@ namespace RT1
             }
             return bilinear_interplote(c, v, w);
         }
+        int floor(float f)
+        {
+            return (int)Math.Floor(f);
+        }
         public float GetValue(vec3 pos)
         {
-            int x = (int)MathF.Abs (pos.x * 4)% 256;
-            int y = (int)MathF.Abs(pos.y * 4)% 256;
-            int z = (int)MathF.Abs(pos.z * 4)% 256;
+            int x = (int)Math.Floor (pos.x);
+            int y = (int)Math.Floor(pos.y);
+            int z = (int)Math.Floor(pos.z);
             //return _randomValue[_xAxis[x] ^ _yAxis[y] ^ _zAxis[z]];
-            float u = MathF.Abs(pos.x - (int)pos.x);
-            float v = MathF.Abs(pos.y - (int)pos.y);
-            float w = MathF.Abs(pos.z - (int)pos.z);
+            float u = pos.x - floor(pos.x);
+            float v = pos.y - floor(pos.y);
+            float w = pos.z - floor(pos.z);
+            u = u * u* (3 - 2 * u);
+            v = v * v * (3 - 2 * v);
+            w = w * w * (3 - 2 * w);
             float[,,] values = new float[2,2,2];
             for(int i=0;i<2;++i)
             {
@@ -53,12 +60,25 @@ namespace RT1
                 {
                     for(int k=0;k<2;++k)
                     {
-                        int idx = (_xAxis[x] + i) ^ (_yAxis[y] + j) ^ (_zAxis[z] + k);
-                        values[i, j, k] = _randomValue[idx % 256];
+                        int idx = (_xAxis[(x+i)&255]) ^ (_yAxis[(y+j) & 255]) ^ (_zAxis[(z+k) & 255]);
+                        values[i, j, k] = _randomValue[idx];
                     }
                 }
             }
             return trlinear_interpolte(values,u,v,w);
+        }
+        public float turb(vec3 p, int depth = 7)
+        {
+            float accum = 0;
+            vec3 temp_p = p;
+            float weight = 1.0f;
+            for (int i = 0; i < depth; i++)
+            {
+                accum += weight * GetValue(temp_p);
+                weight *= 0.5f;
+                temp_p *= 2;
+            }
+            return Math.Abs(accum);
         }
         public Noise()
         {
@@ -68,10 +88,25 @@ namespace RT1
             }
             for(int i =0;i< maxL;++i)
             {
-                _xAxis[i] = (int)(maxL * Exten.rand01());
-                _yAxis[i] = (int)(maxL * Exten.rand01()); 
-                _zAxis[i] = (int)(maxL * Exten.rand01()); 
+                _xAxis[i] = i; //(int)(maxL * Exten.rand01());
+                _yAxis[i] = i; //(int)(maxL * Exten.rand01());
+                _zAxis[i] = i; //(int)(maxL * Exten.rand01()); 
+            }
+            shuff(_xAxis);
+            shuff(_yAxis);
+            shuff(_zAxis);
+        }
+        void shuff (int [] vs )
+        {
+            for(int i = 0;i<vs.Length-1;++i)
+            {
+                int nextIdx = i + 1 + (int)((vs.Length - i-1) * Exten.rand01());
+                var temp = vs[i];
+                vs[i] = vs[nextIdx];
+                vs[nextIdx] = temp;
             }
         }
     }
+
 }
+

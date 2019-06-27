@@ -92,39 +92,39 @@ namespace RT1
             var noise = new NoiseTexture(new Noise() );
             list[0] = new Sphere(new vec3(0, -1000, 0), 1000, new Lambertian(noise));
             int i = 1;
-            for (int a = -11; a < 11; a++)
-            {
-                for (int b = -11; b < 11; b++)
-                {
-                    float choose_mat = Exten.rand01();
-                    var center = new vec3(a + 0.9f * Exten.rand01(), 0.2f, b + 0.9f * Exten.rand01());
-                    if ((center - new vec3(4f, 0.2f, 0f)).length() > 0.9f)
-                    {
-                        if (choose_mat < 0.8)
-                        {  // diffuse
-                            var color = new vec3(Exten.rand01() * Exten.rand01(), Exten.rand01() * Exten.rand01(), Exten.rand01() * Exten.rand01());
+            //for (int a = -11; a < 11; a++)
+            //{
+            //    for (int b = -11; b < 11; b++)
+            //    {
+            //        float choose_mat = Exten.rand01();
+            //        var center = new vec3(a + 0.9f * Exten.rand01(), 0.2f, b + 0.9f * Exten.rand01());
+            //        if ((center - new vec3(4f, 0.2f, 0f)).length() > 0.9f)
+            //        {
+            //            if (choose_mat < 0.8)
+            //            {  // diffuse
+            //                var color = new vec3(Exten.rand01() * Exten.rand01(), Exten.rand01() * Exten.rand01(), Exten.rand01() * Exten.rand01());
 
-                            var mat = new Lambertian(new SolidTexture(color));
-                            list[i++] = new Sphere(center, 0.2f,mat);
-                        }
-                        else if (choose_mat < 0.95f)
-                        { // metal
-                            list[i++] = new Sphere(center, 0.2f,
-                                    new Metal(new vec3(0.5f * (1 + drand48()), 0.5f * (1 + drand48()), 0.5f * (1 + drand48())), 0.5f * drand48()));
-                        }
-                        else
-                        {  // glass
-                            list[i++] = new Sphere(center, 0.2f, new Dieletric(1.5f));
-                        }
-                    }
-                }
-            }
+            //                var mat = new Lambertian(new SolidTexture(color));
+            //                list[i++] = new Sphere(center, 0.2f,mat);
+            //            }
+            //            else if (choose_mat < 0.95f)
+            //            { // metal
+            //                list[i++] = new Sphere(center, 0.2f,
+            //                        new Metal(new vec3(0.5f * (1 + drand48()), 0.5f * (1 + drand48()), 0.5f * (1 + drand48())), 0.5f * drand48()));
+            //            }
+            //            else
+            //            {  // glass
+            //                list[i++] = new Sphere(center, 0.2f, new Dieletric(1.5f));
+            //            }
+            //        }
+            //    }
+            //}
 
-            list[i++] = new Sphere(new vec3(2, 1, 0), 1.0f, new Dieletric(1.3f));
-            list[i++] = new Sphere(new vec3(-3, 1, 2), 1.0f, new Metal(new vec3(0.4f, 0.2f, 0.1f),0.2f));
-            list[i++] = new Sphere(new vec3(4, 1, 0), 1.0f, new Lambertian(check));
+            //list[i++] = new Sphere(new vec3(2, 1, 0), 1.0f, new Dieletric(1.3f));
+            //list[i++] = new Sphere(new vec3(-3, 1, 2), 1.0f, new Metal(new vec3(0.4f, 0.2f, 0.1f),0.2f));
+            list[i++] = new Sphere(new vec3(4, 1, 0), 1.0f, new Lambertian(noise));
             //list[i++] = new Sphere(new vec3(4, 1, -0.5f), 1.0f, new Metal(new vec3(0.7f, 0.6f, 0.5f), 0.0f));
-            var finalList = list.Take(1).Where(p => p != null).ToArray();
+            var finalList = list.Where(p => p != null).ToArray();
             if (!bvh)
             {
                 return new HitList(finalList);

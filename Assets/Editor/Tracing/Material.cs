@@ -37,7 +37,7 @@ namespace RT1
         }
         public vec3 sample(float u, float v, vec3 pos)
         {
-            return new vec3(1,1,1) * _noise.GetValue(pos);
+            return new vec3(1,1,1) * MathF.Sin(3.0f*pos.z + 15.0f*_noise.turb(pos));
         }
     }
     public class CheckTexture : Texture
