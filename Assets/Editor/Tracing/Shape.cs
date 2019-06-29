@@ -78,6 +78,13 @@ namespace RT1
                 return AABB.SurroundingBox(b0, b1);
             }
         }
+        static void CalUV(vec3 point,out float u ,out float v)
+        {
+            float theta = (float)Math.Acos(point.z);
+            float phi = (float)Math.Atan2(point.y, point.x);
+            u = (theta + MathF.PI/2.0f) /  MathF.PI;
+            v = (phi + MathF.PI) / (2.0f * MathF.PI);
+        }
         public bool Hit(Ray ray, float min, float max, out HitRecord r)
         {
             //var hitpoint = r.position + r.direction * t;
@@ -107,6 +114,54 @@ namespace RT1
             r.point = ray.at(t);
             r.normal = (r.point - origin) / radius;
             r.mat = mat;
+            CalUV(r.normal, out r.u, out r.v);
+            return true;
+        }
+    }
+    class XZRect : Hitable
+    {
+        float _y;
+        float _x1, _x2;
+        float _z1, _z2;
+        Material _mat;
+        bool _flipNormal;
+        public XZRect(float y, float x1, float x2, float z1, float z2, Material mat,bool flipNormal=false)
+        {
+            _y = y;
+            _x1 = x1;
+            _x2 = x2;
+            _z1 = z1;
+            _z2 = z2;
+            _mat = mat;
+            _flipNormal = flipNormal;
+        }
+        public AABB BoundVolume(float t0, float t1)
+        {
+            return new AABB(new vec3(_x1, _y-0.001f, _z1), new vec3(_x2, _y+0.001f, _z2));
+        }
+
+        public bool Hit(Ray ray, float min, float max, out HitRecord r)
+        {
+            r = null;
+            float t = (_y - ray.position.y) / ray.direction.y;
+            if (t < min || t > max)
+            {
+                return false;
+            }
+            float x = ray.position.x + ray.direction.x * t;
+            float z = ray.position.z + ray.direction.z * t;
+            bool hit = _x1 <= x && x <= _x2 && _z1 <= z && z <= _z2;
+            if (!hit)
+            {
+                return false;
+            }
+            r = new HitRecord();
+            r.t = t;
+            r.point = ray.at(t);
+            r.normal = new vec3(0, _flipNormal ? -1: 1, 0);
+            r.mat = _mat;
+            r.u = (x - _x1) / (_x2 - _x1);
+            r.v = (z - _z1) / (_z2 - _z1);
             return true;
         }
     }
@@ -116,7 +171,8 @@ namespace RT1
         float _x1, _x2;
         float _y1, _y2;
         Material _mat;
-        public XYRect(float z,float x1,float x2,float y1,float y2,Material mat)
+        bool _flipNormal;
+        public XYRect(float z,float x1,float x2,float y1,float y2,Material mat,bool flipNormal = false)
         {
             _z = z;
             _x1 = x1;
@@ -124,6 +180,7 @@ namespace RT1
             _y1 = y1;
             _y2 = y2;
             _mat = mat;
+            _flipNormal = flipNormal;
         }
         public AABB BoundVolume(float t0, float t1)
         {
@@ -133,7 +190,7 @@ namespace RT1
         public bool Hit(Ray ray, float min, float max, out HitRecord r)
         {
             r = null;
-            float t = (_z - ray.direction.z) / ray.position.z;
+            float t = (_z - ray.position.z) / ray.direction.z;
             if(t < min || t > max)
             {
                 return false;
@@ -148,11 +205,62 @@ namespace RT1
             r = new HitRecord();
             r.t = t;
             r.point = ray.at(t);
-            r.normal = new vec3(0, 0, 1);
+            r.normal = new vec3(0, 0, _flipNormal ? -1:1);
             r.mat = _mat;
+            r.u = (x - _x1) / (_x2 - _x1);
+            r.v = (y - _y1) / (_y2 - _y1);
             return true;
         }
     }
+
+    class YZRect : Hitable
+    {
+        float _x;
+        float _z1, _z2;
+        float _y1, _y2;
+        Material _mat;
+        bool _flipNormal;
+        public YZRect(float x, float y1, float y2, float z1, float z2, Material mat, bool flipNormal = false)
+        {
+            _x = x;
+            _z1 = z1;
+            _z2 = z2;
+            _y1 = y1;
+            _y2 = y2;
+            _mat = mat;
+            _flipNormal = flipNormal;
+        }
+        public AABB BoundVolume(float t0, float t1)
+        {
+            return new AABB(new vec3(_x-0.001f, _y1, _z1), new vec3(_x+0.001f, _y2, _z2));
+        }
+
+        public bool Hit(Ray ray, float min, float max, out HitRecord r)
+        {
+            r = null;
+            float t = (_x - ray.position.x) / ray.direction.x;
+            if (t < min || t > max)
+            {
+                return false;
+            }
+            float z = ray.position.z + ray.direction.z * t;
+            float y = ray.position.y + ray.direction.y * t;
+            bool hit = _z1 <= z && z <= _z2 && _y1 <= y && y <= _y2;
+            if (!hit)
+            {
+                return false;
+            }
+            r = new HitRecord();
+            r.t = t;
+            r.point = ray.at(t);
+            r.normal = new vec3(_flipNormal ? -1 : 1, 0,0 );
+            r.mat = _mat;
+            r.u = (y - _y1) / (_y2 - _y1);
+            r.v = (z - _z1) / (_z2 - _z1);
+            return true;
+        }
+    }
+
     class HitList : Hitable
     {
         Hitable[] _hitables;

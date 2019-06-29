@@ -38,19 +38,21 @@ namespace RT1
             {
                 Ray nextRay;
                 vec3 color;
+                var emmited = record.mat.Emitted(record.u, record.v, record.point);
                 if (depth < 50 && record.mat.Scatter(r, record, out color, out nextRay))
                 {
                     var nextColor = RayTracing(nextRay, depth + 1);
-                    return color.mul(nextColor);
+                    return emmited +  color.mul(nextColor);
                 }
                 else
                 {
-                    return new vec3();
+                    return emmited;
                 }
             }
+            return new vec3();
             vec3 d = r.direction;
             float f = 0.5f * (d.y + 1.0f);
-            return (1 - f) * new vec3(1, 1, 1) + f * new vec3(0.5f, 0.7f, 1.0f);
+            return 0.3f*((1 - f) * new vec3(1, 1, 1) + f * new vec3(0.5f, 0.7f, 1.0f));
         }
 
         static float drand48()
@@ -135,6 +137,35 @@ namespace RT1
                 return new BVHNode(finalList, 0, finalList.Length, 0, 1);
             }
         }
+        static Hitable SimpleLight()
+        {
+            Texture perlintext = new NoiseTexture(new Noise());
+            Hitable[] hitables = new Hitable[4];
+            int i = 0;
+            var tex2 = new SolidTexture(new vec3(4, 4, 4));
+            hitables[i++] = new Sphere(new vec3(0, -1000, 0), 1000, new Lambertian(perlintext));
+            hitables[i++] = new Sphere(new vec3(0, 2, 0), 2, new Lambertian(perlintext));
+            //hitables[i++] = new Sphere(new vec3(0, 7, 0), 2, new DiffuseLight(tex2));
+            hitables[i++] = new XYRect(-2, 3, 5, 1, 3, new DiffuseLight(tex2));
+            var finalList = hitables.Where(h => h != null).ToArray();
+            return new BVHNode(finalList,0,finalList.Length,0,1);
+        }
+        static Hitable CornellBox()
+        {
+            var red = new Lambertian(new vec3(0.65f, 0.05f, 0.05f));
+            var white = new Lambertian(new vec3(0.73f, 0.73f, 0.73f));
+            var green = new Lambertian(new vec3(0.12f, 0.45f, 0.15f));
+            var light = new DiffuseLight(new SolidTexture(new vec3(15, 15, 15)));
+            int i = 0;
+            Hitable[] hitables = new Hitable[6];
+            hitables[i++] = new YZRect(555, 0, 555, 0, 555,green,true);
+            hitables[i++] = new YZRect(0, 0, 555, 0, 555, red);
+            hitables[i++] = new XZRect(554, 213, 243, 227, 332, light);
+            hitables[i++] = new XZRect(0, 0, 555, 0, 555, white);
+            hitables[i++] = new XZRect(555, 0, 555, 0, 555, white,true);
+            hitables[i++] = new XYRect(555, 0, 555, 0, 555, white,true);
+            return new HitList(hitables.Where(p=>p!=null).ToArray());
+        }
 #if UNITY_EDITOR
         static void ShowProgress(float p)
         {
@@ -182,15 +213,15 @@ namespace RT1
             {
                 bvh = bool.Parse(args[4]);
             }
-            scene = random_scene(bvh);
+            scene = CornellBox();// SimpleLight(); //random_scene(bvh);
 
-            vec3 lookfrom = new vec3(13, 2, 3);
-            vec3 lookat = new vec3(0, 0, 0);
+            vec3 lookfrom = new vec3(278, 278, -800);
+            vec3 lookat = new vec3(278, 278, 0);
             float dist_to_focus = 10.0f;
             float aperture = 0.0f;
 
 
-            Camera camera = new Camera(lookfrom,lookat,new vec3(0,1,0),20, (float)(width) / (float)(height), aperture, dist_to_focus,0,1);
+            Camera camera = new Camera(lookfrom,lookat,new vec3(0,1,0),40, (float)(width) / (float)(height), aperture, dist_to_focus,0,1);
             Bitmap bmp = new Bitmap(width, height);
             for (int i = height - 1; i >= 0; --i)
             {

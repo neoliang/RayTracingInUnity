@@ -3,6 +3,7 @@ using GlmNet;
 using System.Linq;
 using System.Drawing;
 using System.Drawing.Imaging;
+using UnityEngine;
 #if UNITY_EDITOR
 using vec3 = UnityEngine.Vector3;
 #endif
@@ -11,6 +12,7 @@ namespace RT1
     interface Material
     {
         bool Scatter(Ray ray, HitRecord hitRecord, out vec3 attenuation, out Ray scattered);
+        vec3 Emitted(float u, float v, vec3 pos);
     }
     interface Texture
     {
@@ -66,6 +68,15 @@ namespace RT1
         {
             color = c;
         }
+        public Lambertian(vec3 c)
+        {
+            color = new SolidTexture(c);
+        }
+        public vec3 Emitted(float u, float v, vec3 pos)
+        {
+            return new vec3(0,0,0);
+        }
+
         public bool Scatter(Ray ray, HitRecord hitRecord, out vec3 attenuation, out Ray scattered)
         {
 
@@ -96,6 +107,29 @@ namespace RT1
             attenuation = color;
             return glm.dot(ray.direction, normal) < 0;
         }
+        public vec3 Emitted(float u, float v, vec3 pos)
+        {
+            return new vec3(0, 0, 0);
+        }
+    }
+    class DiffuseLight : Material
+    {
+        private Texture _text;
+        public DiffuseLight(Texture t)
+        {
+            _text = t;
+        }
+        public vec3 Emitted(float u, float v, vec3 pos)
+        {
+            return _text.sample(u, v, pos);
+        }
+
+        public bool Scatter(Ray ray, HitRecord hitRecord, out vec3 attenuation, out Ray scattered)
+        {
+            scattered = null;
+            attenuation = new vec3();
+            return false;
+        }
     }
     class Dieletric : Material
     {
@@ -117,6 +151,10 @@ namespace RT1
             float rs = (cosi - eta * cost) / (cosi + eta * cost);
             float rp = (eta * cosi - cost) / (eta * cosi + cost);
             return (rs * rs + rp * rp) * 0.5f;
+        }
+        public vec3 Emitted(float u, float v, vec3 pos)
+        {
+            return new vec3(0, 0, 0);
         }
         public bool Scatter(Ray ray, HitRecord hitRecord, out vec3 attenuation, out Ray scattered)
         {
