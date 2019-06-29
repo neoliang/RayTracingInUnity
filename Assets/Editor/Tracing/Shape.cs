@@ -14,6 +14,13 @@ namespace RT1
         public vec3 point;
         public vec3 normal;
         public Material mat;
+        public float u, v;
+
+        public HitRecord()
+        {
+            u = 0;
+            v = 0;
+        }
     }
     interface Hitable
     {
@@ -100,6 +107,49 @@ namespace RT1
             r.point = ray.at(t);
             r.normal = (r.point - origin) / radius;
             r.mat = mat;
+            return true;
+        }
+    }
+    class XYRect : Hitable
+    {
+        float _z;
+        float _x1, _x2;
+        float _y1, _y2;
+        Material _mat;
+        public XYRect(float z,float x1,float x2,float y1,float y2,Material mat)
+        {
+            _z = z;
+            _x1 = x1;
+            _x2 = x2;
+            _y1 = y1;
+            _y2 = y2;
+            _mat = mat;
+        }
+        public AABB BoundVolume(float t0, float t1)
+        {
+            return new AABB(new vec3(_x1, _y1, _z - 0.001f), new vec3(_x2, _y2, _z + 0.001f));
+        }
+
+        public bool Hit(Ray ray, float min, float max, out HitRecord r)
+        {
+            r = null;
+            float t = (_z - ray.direction.z) / ray.position.z;
+            if(t < min || t > max)
+            {
+                return false;
+            }
+            float x = ray.position.x + ray.direction.x * t;
+            float y = ray.position.y + ray.direction.y * t;
+            bool hit = _x1 <= x && x <= _x2 && _y1 <= y && y <= _y2;
+            if(!hit)
+            {
+                return false;
+            }
+            r = new HitRecord();
+            r.t = t;
+            r.point = ray.at(t);
+            r.normal = new vec3(0, 0, 1);
+            r.mat = _mat;
             return true;
         }
     }

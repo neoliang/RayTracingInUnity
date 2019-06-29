@@ -10,7 +10,7 @@ namespace RT1
 {
     interface Material
     {
-        bool Scatter(Ray ray, vec3 point, vec3 normal, out vec3 attenuation, out Ray scattered);
+        bool Scatter(Ray ray, HitRecord hitRecord, out vec3 attenuation, out Ray scattered);
     }
     interface Texture
     {
@@ -37,7 +37,7 @@ namespace RT1
         }
         public vec3 sample(float u, float v, vec3 pos)
         {
-            return new vec3(1,1,1) * MathF.Sin(3.0f*pos.z + 15.0f*_noise.turb(pos));
+            return new vec3(1, 1, 1) * 0.2f* _noise.turb(pos);// MathF.Sin(8.0f*pos.y + 25.0f*_noise.turb(pos));
         }
     }
     public class CheckTexture : Texture
@@ -66,11 +66,11 @@ namespace RT1
         {
             color = c;
         }
-        public bool Scatter(Ray ray, vec3 point, vec3 normal, out vec3 attenuation, out Ray scattered)
+        public bool Scatter(Ray ray, HitRecord hitRecord, out vec3 attenuation, out Ray scattered)
         {
 
-            scattered = new Ray(point, normal + Exten.RandomVecInSphere(), ray.time);
-            attenuation = color.sample(0,0,point);
+            scattered = new Ray(hitRecord.point, hitRecord.normal + Exten.RandomVecInSphere(), ray.time);
+            attenuation = color.sample(hitRecord.u,hitRecord.v,hitRecord.point);
             return true;
         }
     }
@@ -83,8 +83,10 @@ namespace RT1
             color = c;
             fuzz = f;
         }
-        public bool Scatter(Ray ray, vec3 point, vec3 normal, out vec3 attenuation, out Ray scattered)
+        public bool Scatter(Ray ray, HitRecord hitRecord, out vec3 attenuation, out Ray scattered)
         {
+            var normal = hitRecord.normal;
+            var point = hitRecord.point;
             var reflected = Exten.reflect(ray.direction, normal);
             if (fuzz > 0)
             {
@@ -116,8 +118,10 @@ namespace RT1
             float rp = (eta * cosi - cost) / (eta * cosi + cost);
             return (rs * rs + rp * rp) * 0.5f;
         }
-        public bool Scatter(Ray ray, vec3 point, vec3 normal, out vec3 attenuation, out Ray scattered)
+        public bool Scatter(Ray ray, HitRecord hitRecord, out vec3 attenuation, out Ray scattered)
         {
+            var normal = hitRecord.normal;
+            var point = hitRecord.point;
             attenuation = new vec3(1.0f, 1.0f, 1.0f);
             float eta = ref_idx;
             var n = normal;

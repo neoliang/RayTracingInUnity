@@ -38,7 +38,7 @@ namespace RT1
             {
                 Ray nextRay;
                 vec3 color;
-                if (depth < 50 && record.mat.Scatter(r, record.point, record.normal, out color, out nextRay))
+                if (depth < 50 && record.mat.Scatter(r, record, out color, out nextRay))
                 {
                     var nextColor = RayTracing(nextRay, depth + 1);
                     return color.mul(nextColor);
