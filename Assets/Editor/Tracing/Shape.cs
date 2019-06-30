@@ -260,7 +260,33 @@ namespace RT1
             return true;
         }
     }
+    class Box : Hitable
+    {
+        AABB _aabb;
+        HitList _sideList;
+        public Box(vec3 min,vec3 max,Material mat)
+        {
+            _aabb = new AABB(min, max);
+            var sides = new Hitable[6];
+            sides[0] = new XZRect(max.y, min.x, max.x, min.z, max.z, mat);
+            sides[1] = new XZRect(min.y, min.x, max.x, min.z, max.z, mat,true);
+            sides[2] = new YZRect(max.x, min.y, max.y, min.z, max.z, mat);
+            sides[3] = new YZRect(min.x, min.y, max.y, min.z, max.z, mat, true);
+            sides[4] = new XYRect(max.z, min.x, max.x, min.y, max.y, mat);
+            sides[5] = new XYRect(min.z, min.x, max.x, min.y, max.y, mat, true);
+            _sideList = new HitList(sides);
 
+        }
+        public AABB BoundVolume(float t0, float t1)
+        {
+            return _aabb;
+        }
+
+        public bool Hit(Ray ray, float min, float max, out HitRecord r)
+        {
+            return _sideList.Hit(ray, min, max, out r);
+        }
+    }
     class HitList : Hitable
     {
         Hitable[] _hitables;

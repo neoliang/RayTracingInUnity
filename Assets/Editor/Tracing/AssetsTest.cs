@@ -157,13 +157,15 @@ namespace RT1
             var green = new Lambertian(new vec3(0.12f, 0.45f, 0.15f));
             var light = new DiffuseLight(new SolidTexture(new vec3(15, 15, 15)));
             int i = 0;
-            Hitable[] hitables = new Hitable[6];
+            Hitable[] hitables = new Hitable[8];
             hitables[i++] = new YZRect(555, 0, 555, 0, 555,green,true);
             hitables[i++] = new YZRect(0, 0, 555, 0, 555, red);
-            hitables[i++] = new XZRect(554, 213, 243, 227, 332, light);
+            hitables[i++] = new XZRect(554, 213, 343, 227, 332, light);
             hitables[i++] = new XZRect(0, 0, 555, 0, 555, white);
             hitables[i++] = new XZRect(555, 0, 555, 0, 555, white,true);
             hitables[i++] = new XYRect(555, 0, 555, 0, 555, white,true);
+            hitables[i++] = new Box(new vec3(130, 0, 65), new vec3(295, 165, 230), white);
+            hitables[i++] = new Box(new vec3(265, 0, 295), new vec3(430, 330, 460), white);
             return new HitList(hitables.Where(p=>p!=null).ToArray());
         }
 #if UNITY_EDITOR
