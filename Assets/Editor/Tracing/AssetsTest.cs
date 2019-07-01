@@ -150,6 +150,43 @@ namespace RT1
             var finalList = hitables.Where(h => h != null).ToArray();
             return new BVHNode(finalList,0,finalList.Length,0,1);
         }
+        static Hitable FinalTest()
+        {
+            int nb = 20;
+            Hitable[] list = new Hitable[30];
+            Hitable[] boxlist = new Hitable[10000];
+            Material ground = new Lambertian(new SolidTexture(new vec3(0.48f, 0.83f, 0.53f)));
+            int b = 0;
+            for (int i = 0; i < nb; i++)
+            {
+                for (int j = 0; j < nb; j++)
+                {
+                    float w = 100;
+                    float x0 = -1000 + i * w;
+                    float z0 = -1000 + j * w;
+                    float y0 = 0;
+                    float x1 = x0 + w;
+                    float y1 = 100 * (Exten.rand01() + 0.01f);
+                    float z1 = z0 + w;
+                    boxlist[b++] = new Box(new vec3(x0, y0, z0), new vec3(x1, y1, z1), ground);
+                }
+            }
+            int l = 0;
+            list[l++] = new BVHNode(boxlist,0, b, 0, 1);
+            Material light = new DiffuseLight(new SolidTexture(new vec3(7, 7, 7)));
+            list[l++] = new XZRect(554, 123, 423, 147, 412,   light);
+            vec3 center = new vec3(400, 400, 200);
+            //public Sphere(vec3 c, vec3 c1, float r, Material m, float time1, float time2)
+            list[l++] = new Sphere(center, center + new vec3(30, 0, 0), 50, new Lambertian(new SolidTexture(new vec3(0.7f, 0.3f, 0.1f))), 0, 1);
+            list[l++] = new Sphere(new vec3(260, 150, 45), 50, new Dieletric(1.5f));
+            list[l++] = new Sphere(new vec3(0, 150, 145), 50, new Metal(new vec3(0.8f, 0.8f, 0.9f), 10.0f));
+            Hitable boundary = new Sphere(new vec3(360, 150, 145), 70, new Dieletric(1.5f));
+            list[l++] = boundary;
+            boundary = new Sphere(new vec3(0, 0, 0), 5000, new Dieletric(1.5f));
+            Texture pertext = new NoiseTexture(new Noise());
+            list[l++] = new Sphere(new vec3(220, 280, 300), 80, new Lambertian(pertext));
+            return new HitList(list.Where(arg => arg !=null).ToArray());
+        }
         static Hitable CornellBox()
         {
             var red = new Lambertian(new vec3(0.65f, 0.05f, 0.05f));
@@ -164,8 +201,13 @@ namespace RT1
             hitables[i++] = new XZRect(0, 0, 555, 0, 555, white);
             hitables[i++] = new XZRect(555, 0, 555, 0, 555, white,true);
             hitables[i++] = new XYRect(555, 0, 555, 0, 555, white,true);
-            hitables[i++] = new Box(new vec3(130, 0, 65), new vec3(295, 165, 230), white);
-            hitables[i++] = new Box(new vec3(265, 0, 295), new vec3(430, 330, 460), white);
+
+            Hitable box = new Box(new vec3(0, 0, 0), new vec3(165, 165, 165), new Dieletric(1.5f));
+            box = new Tranlate(new RotateY(box, -18), new vec3(130, 0, 65));
+            hitables[i++] = box;
+            Hitable box2 = new Box(new vec3(0, 0, 0), new vec3(165, 330, 165), white);
+            box2 = new Tranlate(new RotateY(box2, 15), new vec3(265, 0, 295));
+            hitables[i++] = box2;
             return new HitList(hitables.Where(p=>p!=null).ToArray());
         }
 #if UNITY_EDITOR
@@ -215,7 +257,7 @@ namespace RT1
             {
                 bvh = bool.Parse(args[4]);
             }
-            scene = CornellBox();// SimpleLight(); //random_scene(bvh);
+            scene = FinalTest();// CornellBox();// SimpleLight(); //random_scene(bvh);
 
             vec3 lookfrom = new vec3(278, 278, -800);
             vec3 lookat = new vec3(278, 278, 0);

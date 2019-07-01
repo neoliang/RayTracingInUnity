@@ -34,9 +34,13 @@ namespace GlmNet
         {
             return UnityEngine.Mathf.Pow(f, p);
         }
-        public static float Sin(float angle)
+        public static float Sin(float radians)
         {
-            return UnityEngine.Mathf.Sin(angle);
+            return UnityEngine.Mathf.Sin(radians);
+        }
+        public static float Cos(float radians)
+        {
+            return UnityEngine.Mathf.Cos(radians);
         }
     }
 }

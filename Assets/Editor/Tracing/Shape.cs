@@ -287,6 +287,74 @@ namespace RT1
             return _sideList.Hit(ray, min, max, out r);
         }
     }
+    class Tranlate : Hitable
+    {
+        vec3 _offset;
+        Hitable _inner;
+        public Tranlate(Hitable hitable, vec3 o)
+        {
+            _inner = hitable;
+            _offset = o;
+        }
+        public AABB BoundVolume(float t0, float t1)
+        {
+            var b = _inner.BoundVolume(t0,t1);
+            return new AABB(b._min + _offset, b._max + _offset);
+        }
+
+        public bool Hit(Ray ray, float min, float max, out HitRecord r)
+        {
+            var newRay = new Ray(ray.position - _offset, ray.direction, ray.time);
+            if (_inner.Hit(newRay, min, max, out r))
+            {
+                r.point += _offset;
+                return true;
+            }
+            return false;
+        }
+    }
+    class RotateY : Hitable
+    {
+        Hitable _inner;
+        float cos_theta;
+        float sin_theta;
+        public RotateY(Hitable hitable,float angle)
+        {
+            _inner = hitable;
+            float radians = (MathF.PI  / 180.0f) * angle;
+            sin_theta = MathF.Sin(radians);
+            cos_theta = MathF.Cos(radians);
+        }
+        public AABB BoundVolume(float t0, float t1)
+        {
+            return _inner.BoundVolume(t0,t1);
+        }
+
+        public bool Hit(Ray ray, float min, float max, out HitRecord r)
+        {
+            vec3 origin = ray.position;
+            vec3 direction = ray.direction;
+            origin[0] = cos_theta * ray.position[0] - sin_theta * ray.position[2];
+            origin[2] = sin_theta * ray.position[0] + cos_theta * ray.position[2];
+            direction[0] = cos_theta * ray.direction[0] - sin_theta * ray.direction[2];
+            direction[2] = sin_theta * ray.direction[0] + cos_theta * ray.direction[2];
+            var rotated_r = new Ray(origin, direction, ray.time);
+            if (_inner.Hit(rotated_r, min, max, out r))
+            {
+                vec3 normal = r.normal;
+                var x = cos_theta * r.point[0] + sin_theta * r.point[2];
+                var z = -sin_theta * r.point[0] + cos_theta * r.point[2];
+                r.point = new vec3(x, r.point.y, z);
+                x = cos_theta * r.normal[0] + sin_theta * r.normal[2];
+                z = -sin_theta * r.normal[0] + cos_theta * r.normal[2];
+                r.normal = glm.normalize(new vec3(x, r.normal.y, z));
+
+                return true;
+            }
+            else
+                return false;
+        }
+    }
     class HitList : Hitable
     {
         Hitable[] _hitables;
