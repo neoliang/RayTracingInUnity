@@ -42,7 +42,7 @@ namespace RT1
                 if (depth < 50 && record.mat.Scatter(r, record, out color, out nextRay))
                 {
                     var nextColor = RayTracing(nextRay, depth + 1);
-                    return emmited +  color.mul(nextColor);
+                    return emmited + glm.dot(nextRay.direction, record.normal) * 2.0f * color.mul(nextColor) ;
                 }
                 else
                 {
@@ -202,7 +202,7 @@ namespace RT1
             hitables[i++] = new XZRect(555, 0, 555, 0, 555, white,true);
             hitables[i++] = new XYRect(555, 0, 555, 0, 555, white,true);
 
-            Hitable box = new Box(new vec3(0, 0, 0), new vec3(165, 165, 165), new Dieletric(1.5f));
+            Hitable box = new Box(new vec3(0, 0, 0), new vec3(165, 165, 165), white);
             box = new Tranlate(new RotateY(box, -18), new vec3(130, 0, 65));
             hitables[i++] = box;
             Hitable box2 = new Box(new vec3(0, 0, 0), new vec3(165, 330, 165), white);
@@ -257,7 +257,7 @@ namespace RT1
             {
                 bvh = bool.Parse(args[4]);
             }
-            scene = FinalTest();// CornellBox();// SimpleLight(); //random_scene(bvh);
+            scene = CornellBox();// SimpleLight(); //random_scene(bvh);
 
             vec3 lookfrom = new vec3(278, 278, -800);
             vec3 lookat = new vec3(278, 278, 0);
@@ -287,6 +287,9 @@ namespace RT1
                     int r = (int)(c.x * 255.99f);
                     int g = (int)(c.y * 255.99f);
                     int b = (int)(c.z * 255.99f);
+                    r = r > 255 ? 255 : r;
+                    g = g > 255 ? 255 : g;
+                    b = b > 255 ? 255 : b;
                     Color o = Color.FromArgb(r, g, b);
 #if UNITY_EDITOR
                     bmp.SetPixel(j, i, o);
