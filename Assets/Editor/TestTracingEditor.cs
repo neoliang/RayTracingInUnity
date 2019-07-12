@@ -66,22 +66,7 @@ public class TestTracingEditor : Editor
             return t.rootPath;
         }
     }
-    string dllPath
-    {
-        get
-        {
-            var t = (target as TestTracing);
-            return t.rootPath + t.dllPath;
-        }
-    }
-    string projectName
-    {
-        get
-        {
-            var t = (target as TestTracing);
-            return t.projectName;
-        }
-    }
+    static string dotnet = "dotnet"; //"/usr/local/share/dotnet/dotnet";
     static readonly string fileDir = "Tracing";
     void Compile()
     {
@@ -89,8 +74,8 @@ public class TestTracingEditor : Editor
         p1 = DeletePathLastComponent(p1);
         DirectoryCopy(p1 + fileDir, root + "/" + fileDir,true);
         System.Diagnostics.Process x = new System.Diagnostics.Process();
-        x.StartInfo.FileName = "/usr/local/share/dotnet/dotnet";
-        x.StartInfo.Arguments = string.Format("build {0}{1} --configuration Release", root,projectName);
+        x.StartInfo.FileName = dotnet;
+        x.StartInfo.Arguments = string.Format("build {0} --configuration Release", root);
         x.StartInfo.StandardOutputEncoding = System.Text.Encoding.ASCII;
         x.StartInfo.RedirectStandardOutput = true;
         x.StartInfo.UseShellExecute = false;
@@ -106,9 +91,10 @@ public class TestTracingEditor : Editor
     {
         var t = (target as TestTracing);
         System.Diagnostics.Process x = new System.Diagnostics.Process();
-        x.StartInfo.FileName = "/usr/local/share/dotnet/dotnet";
+        x.StartInfo.FileName = dotnet;
         var outPath = AssetDatabase.GetAssetPath(target) + t.fileName;
-        x.StartInfo.Arguments = string.Format("{0} {1} {2} {3} {4} {5}", dllPath, t.SampleCount, t.Width, t.Height, outPath,t.useBVH);
+        x.StartInfo.Arguments = string.Format("run --configuration Release --project {0} {1} {2} {3} {4} {5}", root, t.SampleCount, t.Width, t.Height, outPath,t.useBVH);
+        Debug.Log(x.StartInfo.Arguments);
         var t1 = Time.realtimeSinceStartup;
         x.Start();
         x.WaitForExit();
@@ -133,7 +119,7 @@ public class TestTracingEditor : Editor
         {
             var t = (target as TestTracing);
             var p1 = AssetDatabase.GetAssetPath(target);
-            RT1.Program.Main(new string[] { t.SampleCount.ToString(), t.Width.ToString(), t.Height.ToString(), p1 + t.fileName });
+            RT1.Program.Main(new string[] {t.SampleCount.ToString(), t.Width.ToString(), t.Height.ToString(), p1 + t.fileName });
             AssetDatabase.Refresh();
         }
         if (GUILayout.Button("Compile"))

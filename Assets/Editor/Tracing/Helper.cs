@@ -74,6 +74,12 @@ namespace RT1
             }
 
         }
+        public static vec3 RandomHalfVecInSphere()
+        {
+            vec3 n = 2.0f * vec(rand01(), rand01(), rand01()) - vec(1.0f, 1.0f, 1.0f);
+            n = glm.normalize(n) / 2.0f;
+            return n;
+        }
         public static vec3 RandomVecInSphere()
         {
             vec3 n;

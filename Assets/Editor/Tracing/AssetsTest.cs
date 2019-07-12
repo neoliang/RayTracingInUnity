@@ -260,7 +260,6 @@ namespace RT1
                 bvh = bool.Parse(args[4]);
             }
             scene =  CornellBox();// SimpleLight(); //random_scene(bvh);
-
             vec3 lookfrom = new vec3(278, 278, -800);
             vec3 lookat = new vec3(278, 278, 0);
             float dist_to_focus = 10.0f;
@@ -289,6 +288,9 @@ namespace RT1
                     int r = (int)(c.x * 255.99f);
                     int g = (int)(c.y * 255.99f);
                     int b = (int)(c.z * 255.99f);
+                    r = r > 255 ? 255 : r;
+                    g = g > 255 ? 255 : g;
+                    b = b > 255 ? 255 : b;
                     Color o = Color.FromArgb(r, g, b);
 #if UNITY_EDITOR
                     bmp.SetPixel(j, i, o);

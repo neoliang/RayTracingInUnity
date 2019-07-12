@@ -3,8 +3,8 @@ using GlmNet;
 using System.Linq;
 using System.Drawing;
 using System.Drawing.Imaging;
-using UnityEngine;
 #if UNITY_EDITOR
+using UnityEngine;
 using vec3 = UnityEngine.Vector3;
 #endif
 namespace RT1
@@ -81,7 +81,7 @@ namespace RT1
         public bool Scatter(Ray ray, HitRecord hitRecord, out vec3 attenuation, out Ray scattered, out float pdf)
         {
 
-            scattered = new Ray(hitRecord.point, hitRecord.normal + Exten.RandomVecInSphere(), ray.time);
+            scattered = new Ray(hitRecord.point, hitRecord.normal /2.0f + Exten.RandomHalfVecInSphere(), ray.time);
             attenuation = color.sample(hitRecord.u,hitRecord.v,hitRecord.point);
             pdf =  glm.dot(hitRecord.normal, scattered.direction) ;
             return true;

@@ -91,8 +91,5 @@ public class TestTracing : UnityEngine.ScriptableObject
     public int SampleCount = 5;
     public string fileName = "1.ppm";
     public bool useBVH = true;
-    public string rootPath;
-    public string dllPath;
-    public string projectName;
-
+    public string rootPath = "C:/Users/feefiliang/source/repos/RT1/RT1/";
 }
