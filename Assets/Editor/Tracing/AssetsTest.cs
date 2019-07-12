@@ -39,10 +39,12 @@ namespace RT1
                 Ray nextRay;
                 vec3 color;
                 var emmited = record.mat.Emitted(record.u, record.v, record.point);
-                if (depth < 50 && record.mat.Scatter(r, record, out color, out nextRay))
+                float pdf = 1.0f;
+                if (depth < 50 && record.mat.Scatter(r, record, out color, out nextRay,out pdf))
                 {
                     var nextColor = RayTracing(nextRay, depth + 1);
-                    return emmited +  color.mul(nextColor);
+                    float scatterPdf = record.mat.Scatter_PDf(r, record, nextRay);
+                    return emmited +   color.mul(nextColor) * scatterPdf ;
                 }
                 else
                 {
@@ -202,7 +204,7 @@ namespace RT1
             hitables[i++] = new XZRect(555, 0, 555, 0, 555, white,true);
             hitables[i++] = new XYRect(555, 0, 555, 0, 555, white,true);
 
-            Hitable box = new Box(new vec3(0, 0, 0), new vec3(165, 165, 165), new Dieletric(1.5f));
+            Hitable box = new Box(new vec3(0, 0, 0), new vec3(165, 165, 165), white);
             box = new Tranlate(new RotateY(box, -18), new vec3(130, 0, 65));
             hitables[i++] = box;
             Hitable box2 = new Box(new vec3(0, 0, 0), new vec3(165, 330, 165), white);
@@ -257,7 +259,7 @@ namespace RT1
             {
                 bvh = bool.Parse(args[4]);
             }
-            scene = FinalTest();// CornellBox();// SimpleLight(); //random_scene(bvh);
+            scene =  CornellBox();// SimpleLight(); //random_scene(bvh);
 
             vec3 lookfrom = new vec3(278, 278, -800);
             vec3 lookat = new vec3(278, 278, 0);

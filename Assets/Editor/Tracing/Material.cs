@@ -11,7 +11,8 @@ namespace RT1
 {
     interface Material
     {
-        bool Scatter(Ray ray, HitRecord hitRecord, out vec3 attenuation, out Ray scattered);
+        bool Scatter(Ray ray, HitRecord hitRecord, out vec3 attenuation, out Ray scattered,out float pdf);
+        float Scatter_PDf(Ray ray, HitRecord hitRecord, Ray scattered);
         vec3 Emitted(float u, float v, vec3 pos);
     }
     interface Texture
@@ -77,12 +78,18 @@ namespace RT1
             return new vec3(0,0,0);
         }
 
-        public bool Scatter(Ray ray, HitRecord hitRecord, out vec3 attenuation, out Ray scattered)
+        public bool Scatter(Ray ray, HitRecord hitRecord, out vec3 attenuation, out Ray scattered, out float pdf)
         {
 
             scattered = new Ray(hitRecord.point, hitRecord.normal + Exten.RandomVecInSphere(), ray.time);
             attenuation = color.sample(hitRecord.u,hitRecord.v,hitRecord.point);
+            pdf =  glm.dot(hitRecord.normal, scattered.direction) ;
             return true;
+        }
+
+        public float Scatter_PDf(Ray ray, HitRecord hitRecord, Ray scattered)
+        {
+            return glm.dot(hitRecord.normal, scattered.direction);
         }
     }
     class Metal : Material
@@ -94,8 +101,9 @@ namespace RT1
             color = c;
             fuzz = f;
         }
-        public bool Scatter(Ray ray, HitRecord hitRecord, out vec3 attenuation, out Ray scattered)
+        public bool Scatter(Ray ray, HitRecord hitRecord, out vec3 attenuation, out Ray scattered,out float pdf)
         {
+            pdf = 1;
             var normal = hitRecord.normal;
             var point = hitRecord.point;
             var reflected = Exten.reflect(ray.direction, normal);
@@ -111,6 +119,11 @@ namespace RT1
         {
             return new vec3(0, 0, 0);
         }
+
+        public float Scatter_PDf(Ray ray, HitRecord hitRecord, Ray scattered)
+        {
+            return 1;
+        }
     }
     class DiffuseLight : Material
     {
@@ -124,11 +137,17 @@ namespace RT1
             return _text.sample(u, v, pos);
         }
 
-        public bool Scatter(Ray ray, HitRecord hitRecord, out vec3 attenuation, out Ray scattered)
+        public bool Scatter(Ray ray, HitRecord hitRecord, out vec3 attenuation, out Ray scattered,out float pdf)
         {
             scattered = null;
             attenuation = new vec3();
+            pdf = 1;
             return false;
+        }
+
+        public float Scatter_PDf(Ray ray, HitRecord hitRecord, Ray scattered)
+        {
+            return 1;
         }
     }
     class Dieletric : Material
@@ -156,8 +175,9 @@ namespace RT1
         {
             return new vec3(0, 0, 0);
         }
-        public bool Scatter(Ray ray, HitRecord hitRecord, out vec3 attenuation, out Ray scattered)
+        public bool Scatter(Ray ray, HitRecord hitRecord, out vec3 attenuation, out Ray scattered,out float pdf)
         {
+            pdf = 1;
             var normal = hitRecord.normal;
             var point = hitRecord.point;
             attenuation = new vec3(1.0f, 1.0f, 1.0f);
@@ -193,6 +213,11 @@ namespace RT1
             }
             return true;
 
+        }
+
+        public float Scatter_PDf(Ray ray, HitRecord hitRecord, Ray scattered)
+        {
+            return 1;
         }
     }
 }
