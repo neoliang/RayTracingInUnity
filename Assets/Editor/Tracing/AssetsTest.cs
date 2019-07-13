@@ -42,6 +42,22 @@ namespace RT1
                 float pdf = 1.0f;
                 if (depth < 50 && record.mat.Scatter(r, record, out color, out nextRay,out pdf))
                 {
+                    //hard code light
+                    //554, 213, 343, 227, 332
+                    vec3 pointOnLight = new vec3(Exten.randRange(213, 343), 554, Exten.randRange(227, 332));
+                    vec3 toLight = pointOnLight - record.point;
+                    if(glm.dot(toLight,record.normal) <= 0)
+                    {
+                        return emmited;
+                    }
+                    nextRay = new Ray(record.point, toLight, nextRay.time);
+                    if(nextRay.direction.y <0.0001f)
+                    {
+                        return emmited;
+                    }
+                    float area = (343 - 213) * (332 - 227);
+                    float l = toLight.length();
+                    pdf = l * l  /(nextRay.direction.y * area);
                     var nextColor = RayTracing(nextRay, depth + 1);
                     float scatterPdf = record.mat.Scatter_PDf(r, record, nextRay);
                     return emmited +   color.mul(nextColor) * scatterPdf / pdf;
