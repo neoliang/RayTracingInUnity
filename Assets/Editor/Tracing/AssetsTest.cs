@@ -44,7 +44,7 @@ namespace RT1
                 {
                     var nextColor = RayTracing(nextRay, depth + 1);
                     float scatterPdf = record.mat.Scatter_PDf(r, record, nextRay);
-                    return emmited +   color.mul(nextColor) * scatterPdf ;
+                    return emmited +   color.mul(nextColor) * scatterPdf / pdf;
                 }
                 else
                 {
@@ -231,6 +231,10 @@ namespace RT1
         {
         }
 #endif
+        static int clamp(int v,int min,int max)
+        {
+            return v < min ? min : (v > max ? max : v); 
+        }
         public static void Main(string[] args)
         {
             Exten.r = new Random(0);
@@ -288,9 +292,9 @@ namespace RT1
                     int r = (int)(c.x * 255.99f);
                     int g = (int)(c.y * 255.99f);
                     int b = (int)(c.z * 255.99f);
-                    r = r > 255 ? 255 : r;
-                    g = g > 255 ? 255 : g;
-                    b = b > 255 ? 255 : b;
+                    r = clamp(r,0, 255);
+                    g = clamp(g, 0, 255);
+                    b = clamp(b, 0, 255);
                     Color o = Color.FromArgb(r, g, b);
 #if UNITY_EDITOR
                     bmp.SetPixel(j, i, o);

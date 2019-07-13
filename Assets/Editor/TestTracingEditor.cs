@@ -66,7 +66,11 @@ public class TestTracingEditor : Editor
             return t.rootPath;
         }
     }
+#if UNITY_EDITOR_OSX
+    static string dotnet = "/usr/local/share/dotnet/dotnet";
+#else
     static string dotnet = "dotnet"; //"/usr/local/share/dotnet/dotnet";
+#endif
     static readonly string fileDir = "Tracing";
     void Compile()
     {

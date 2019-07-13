@@ -80,16 +80,19 @@ namespace RT1
 
         public bool Scatter(Ray ray, HitRecord hitRecord, out vec3 attenuation, out Ray scattered, out float pdf)
         {
-
-            scattered = new Ray(hitRecord.point, hitRecord.normal /2.0f + Exten.RandomHalfVecInSphere(), ray.time);
+            //half vector
+            //scattered = new Ray(hitRecord.point, hitRecord.normal *0.5f + Exten.RandomHalfVecInSphere(), ray.time);
+            ONB uvw = new ONB(hitRecord.normal);
+            var nextDir = uvw.Local(Exten.RandomCosineDir());
+            scattered = new Ray(hitRecord.point, nextDir, ray.time);
             attenuation = color.sample(hitRecord.u,hitRecord.v,hitRecord.point);
-            pdf =  glm.dot(hitRecord.normal, scattered.direction) ;
+            pdf =  glm.dot(hitRecord.normal, scattered.direction) / MathF.PI;
             return true;
         }
 
         public float Scatter_PDf(Ray ray, HitRecord hitRecord, Ray scattered)
         {
-            return glm.dot(hitRecord.normal, scattered.direction);
+            return glm.dot(hitRecord.normal, scattered.direction) /MathF.PI;
         }
     }
     class Metal : Material
