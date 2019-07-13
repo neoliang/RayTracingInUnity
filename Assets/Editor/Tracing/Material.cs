@@ -83,7 +83,8 @@ namespace RT1
             //half vector
             //scattered = new Ray(hitRecord.point, hitRecord.normal *0.5f + Exten.RandomHalfVecInSphere(), ray.time);
             ONB uvw = new ONB(hitRecord.normal);
-            var nextDir = uvw.Local(Exten.RandomCosineDir());
+            //var nextDir = uvw.Local(Exten.RandomCosineDir());
+            var nextDir = uvw.Local(Exten.RandomUniformCosineDir());
             scattered = new Ray(hitRecord.point, nextDir, ray.time);
             attenuation = color.sample(hitRecord.u,hitRecord.v,hitRecord.point);
             pdf =  glm.dot(hitRecord.normal, scattered.direction) / MathF.PI;
