@@ -87,7 +87,7 @@ namespace RT1
             var nextDir = uvw.Local(Exten.RandomUniformCosineDir());
             scattered = new Ray(hitRecord.point, nextDir, ray.time);
             attenuation = color.sample(hitRecord.u,hitRecord.v,hitRecord.point);
-            pdf =  glm.dot(hitRecord.normal, scattered.direction) / MathF.PI;
+            pdf =  1.0f / (2.0f* MathF.PI);
             return true;
         }
 
