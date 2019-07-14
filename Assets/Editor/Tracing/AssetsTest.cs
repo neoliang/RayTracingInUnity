@@ -31,6 +31,9 @@ namespace RT1
         static Sphere s3 = new Sphere(new vec3(1, 0, -1), 0.5f, new Metal(new vec3(0.8f, .6f, .2f)));
         static Sphere s4 = new Sphere(new vec3(-1, 0, -1), 0.5f, new Dieletric(2.4f));
         static Hitable scene = new HitList(new Hitable[] { s1, s2, s3, s4 });
+        static PDF cosPDf = new CosinePDF();
+        static PDF lightPDf;
+        static PDF mixturePdf;
         static vec3 RayTracing(Ray r, int depth)
         {
             HitRecord record;
@@ -42,22 +45,30 @@ namespace RT1
                 float pdf = 1.0f;
                 if (depth < 50 && record.mat.Scatter(r, record, out color, out nextRay,out pdf))
                 {
-                    //hard code light
-                    //554, 213, 343, 227, 332
-                    vec3 pointOnLight = new vec3(Exten.randRange(213, 343), 554, Exten.randRange(227, 332));
-                    vec3 toLight = pointOnLight - record.point;
-                    if(glm.dot(toLight,record.normal) <= 0)
-                    {
-                        return emmited;
-                    }
-                    nextRay = new Ray(record.point, toLight, nextRay.time);
-                    if(nextRay.direction.y <0.0001f)
-                    {
-                        return emmited;
-                    }
-                    float area = (343 - 213) * (332 - 227);
-                    float l = toLight.length();
-                    pdf = l * l  /(nextRay.direction.y * area);
+                    //if(Exten.rand01() < 0.5)
+                    //{
+                    //    //hard code light
+                    //    //554, 213, 343, 227, 332
+                    //    vec3 pointOnLight = new vec3(Exten.randRange(213, 343), 554, Exten.randRange(227, 332));
+                    //    vec3 toLight = pointOnLight - record.point;
+                    //    if(glm.dot(toLight,record.normal) <= 0)
+                    //    {
+                    //        return emmited;
+                    //    }
+                    //    nextRay = new Ray(record.point, toLight, nextRay.time);
+                    //    if(nextRay.direction.y <0.0001f)
+                    //    {
+                    //        return emmited;
+                    //    }
+                    //    float area = (343 - 213) * (332 - 227);
+                    //    float l = toLight.length();
+                    //    pdf = l * l  /(nextRay.direction.y * area);
+                    //}
+
+
+                    var nextdir = mixturePdf.Generate(record.point, record.normal);
+                    nextRay = new Ray(record.point, nextdir, r.time);
+                    pdf = mixturePdf.Value(nextRay, record.normal); 
                     var nextColor = RayTracing(nextRay, depth + 1);
                     float scatterPdf = record.mat.Scatter_PDf(r, record, nextRay);
                     return emmited +   color.mul(nextColor) * scatterPdf / pdf;
@@ -215,7 +226,8 @@ namespace RT1
             Hitable[] hitables = new Hitable[8];
             hitables[i++] = new YZRect(555, 0, 555, 0, 555,green,true);
             hitables[i++] = new YZRect(0, 0, 555, 0, 555, red);
-            hitables[i++] = new XZRect(554, 213, 343, 227, 332, light,true);
+            var lightRect = new XZRect(554, 213, 343, 227, 332, light, true);
+            hitables[i++] = lightRect;
             hitables[i++] = new XZRect(0, 0, 555, 0, 555, white);
             hitables[i++] = new XZRect(555, 0, 555, 0, 555, white,true);
             hitables[i++] = new XYRect(555, 0, 555, 0, 555, white,true);
@@ -226,6 +238,8 @@ namespace RT1
             Hitable box2 = new Box(new vec3(0, 0, 0), new vec3(165, 330, 165), white);
             box2 = new Tranlate(new RotateY(box2, 15), new vec3(265, 0, 295));
             hitables[i++] = box2;
+            lightPDf = new LightPDF(lightRect);
+            mixturePdf = new MixPDF(cosPDf, lightPDf);
             return new HitList(hitables.Where(p=>p!=null).ToArray());
         }
 #if UNITY_EDITOR

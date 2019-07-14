@@ -9,6 +9,10 @@ using vec3 = UnityEngine.Vector3;
 #endif
 namespace RT1
 {
+    class ScatterRecord
+    { 
+        
+    }
     interface Material
     {
         bool Scatter(Ray ray, HitRecord hitRecord, out vec3 attenuation, out Ray scattered,out float pdf);
@@ -85,11 +89,11 @@ namespace RT1
             //half vector
             //scattered = new Ray(hitRecord.point, hitRecord.normal *0.5f + Exten.RandomHalfVecInSphere(), ray.time);
             ONB uvw = new ONB(hitRecord.normal);
-            //var nextDir = uvw.Local(Exten.RandomCosineDir());
-            var nextDir = uvw.Local(Exten.RandomUniformCosineDir());
+            var nextDir = uvw.Local(Exten.RandomCosineDir());
+            //var nextDir = uvw.Local(Exten.RandomUniformCosineDir());
             scattered = new Ray(hitRecord.point, nextDir, ray.time);
             attenuation = color.sample(hitRecord.u,hitRecord.v,hitRecord.point);
-            pdf =  1.0f / (2.0f* MathF.PI);
+            pdf =  1.0f / (glm.dot(hitRecord.normal, nextDir) * MathF.PI);
             return true;
         }
 

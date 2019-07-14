@@ -120,9 +120,9 @@ namespace RT1
     }
     class XZRect : Hitable
     {
-        float _y;
-        float _x1, _x2;
-        float _z1, _z2;
+        public float _y;
+        public float _x1, _x2;
+        public float _z1, _z2;
         Material _mat;
         bool _flipNormal;
         public XZRect(float y, float x1, float x2, float z1, float z2, Material mat,bool flipNormal=false)
