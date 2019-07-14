@@ -13,6 +13,7 @@ namespace RT1
     {
         float Value(Ray ray, vec3 normal);
         vec3 Generate(vec3 point,vec3 normal);
+        bool IsConst();
     }
     class CosinePDF : PDF
     {
@@ -32,6 +33,13 @@ namespace RT1
             }
             return cos /MathF.PI;
         }
+
+        public bool IsConst()
+        {
+            return false;
+        }
+
+        public static PDF Default = new CosinePDF();
     }
 
     class LightPDF : PDF
@@ -48,6 +56,11 @@ namespace RT1
             var z = Exten.randRange(_lightArea._z1, _lightArea._z2);
             var onLight = new vec3(x, _lightArea._y, z);
             return glm.normalize(onLight - point);
+        }
+
+        public bool IsConst()
+        {
+            return false;
         }
 
         public float Value(Ray ray, vec3 normal)
@@ -69,6 +82,7 @@ namespace RT1
     {
         PDF _pdf1;
         PDF _pdf2;
+
         public MixPDF(PDF pdf1,PDF pdf2)
         {
             _pdf1 = pdf1;
@@ -86,6 +100,10 @@ namespace RT1
         public float Value(Ray ray, vec3 normal)
         {
             return 0.5f * _pdf1.Value(ray, normal) + 0.5f * _pdf2.Value(ray, normal);
+        }
+        public bool IsConst()
+        {
+            return false;
         }
     }
 }

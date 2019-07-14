@@ -31,19 +31,16 @@ namespace RT1
         static Sphere s3 = new Sphere(new vec3(1, 0, -1), 0.5f, new Metal(new vec3(0.8f, .6f, .2f)));
         static Sphere s4 = new Sphere(new vec3(-1, 0, -1), 0.5f, new Dieletric(2.4f));
         static Hitable scene = new HitList(new Hitable[] { s1, s2, s3, s4 });
-        static PDF cosPDf = new CosinePDF();
-        static PDF lightPDf;
-        static PDF mixturePdf;
+        static PDF _lightPDf;
         static vec3 RayTracing(Ray r, int depth)
         {
             HitRecord record;
             if (scene.Hit(r, 0.001f, 100000.0f, out record))
             {
                 Ray nextRay;
-                vec3 color;
                 var emmited = record.mat.Emitted(r,record, record.u, record.v, record.point);
-                float pdf = 1.0f;
-                if (depth < 50 && record.mat.Scatter(r, record, out color, out nextRay,out pdf))
+                ScatterRecord sRecord;
+                if (depth < 50 && record.mat.Scatter(r, record, out sRecord))
                 {
                     //if(Exten.rand01() < 0.5)
                     //{
@@ -65,13 +62,17 @@ namespace RT1
                     //    pdf = l * l  /(nextRay.direction.y * area);
                     //}
 
-
+                    var mixturePdf = sRecord.pdf;
+                    if (!mixturePdf.IsConst())
+                    {
+                        mixturePdf = new MixPDF(sRecord.pdf, _lightPDf);
+                    }
                     var nextdir = mixturePdf.Generate(record.point, record.normal);
                     nextRay = new Ray(record.point, nextdir, r.time);
-                    pdf = mixturePdf.Value(nextRay, record.normal); 
+                    float pdf = mixturePdf.Value(nextRay, record.normal); 
                     var nextColor = RayTracing(nextRay, depth + 1);
                     float scatterPdf = record.mat.Scatter_PDf(r, record, nextRay);
-                    return emmited +   color.mul(nextColor) * scatterPdf / pdf;
+                    return emmited +   sRecord.attenuation.mul(nextColor) * scatterPdf / pdf;
                 }
                 else
                 {
@@ -221,6 +222,8 @@ namespace RT1
             var red = new Lambertian(new vec3(0.65f, 0.05f, 0.05f));
             var white = new Lambertian(new vec3(0.73f, 0.73f, 0.73f));
             var green = new Lambertian(new vec3(0.12f, 0.45f, 0.15f));
+            Material aluminum = new Metal(new vec3(0.8f, 0.85f, 0.88f));
+
             var light = new DiffuseLight(new SolidTexture(new vec3(15, 15, 15)));
             int i = 0;
             Hitable[] hitables = new Hitable[8];
@@ -232,14 +235,13 @@ namespace RT1
             hitables[i++] = new XZRect(555, 0, 555, 0, 555, white,true);
             hitables[i++] = new XYRect(555, 0, 555, 0, 555, white,true);
 
-            Hitable box = new Box(new vec3(0, 0, 0), new vec3(165, 165, 165), white);
+            Hitable box = new Box(new vec3(0, 0, 0), new vec3(165, 165, 165), aluminum);
             box = new Tranlate(new RotateY(box, -18), new vec3(130, 0, 65));
             hitables[i++] = box;
             Hitable box2 = new Box(new vec3(0, 0, 0), new vec3(165, 330, 165), white);
             box2 = new Tranlate(new RotateY(box2, 15), new vec3(265, 0, 295));
             hitables[i++] = box2;
-            lightPDf = new LightPDF(lightRect);
-            mixturePdf = new MixPDF(cosPDf, lightPDf);
+            _lightPDf = new LightPDF(lightRect);
             return new HitList(hitables.Where(p=>p!=null).ToArray());
         }
 #if UNITY_EDITOR

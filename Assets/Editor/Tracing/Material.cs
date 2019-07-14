@@ -10,12 +10,13 @@ using vec3 = UnityEngine.Vector3;
 namespace RT1
 {
     class ScatterRecord
-    { 
-        
+    {
+        public vec3 attenuation;
+        public PDF pdf;
     }
     interface Material
     {
-        bool Scatter(Ray ray, HitRecord hitRecord, out vec3 attenuation, out Ray scattered,out float pdf);
+        bool Scatter(Ray ray, HitRecord hitRecord, out ScatterRecord sRecord);
         float Scatter_PDf(Ray ray, HitRecord hitRecord, Ray scattered);
         vec3 Emitted(Ray ray, HitRecord hitRecord, float u, float v, vec3 pos);
     }
@@ -84,22 +85,45 @@ namespace RT1
             return new vec3(0, 0, 0);
         }
 
-        public bool Scatter(Ray ray, HitRecord hitRecord, out vec3 attenuation, out Ray scattered, out float pdf)
+        public bool Scatter(Ray ray, HitRecord hitRecord, out ScatterRecord sRecord)
         {
+            sRecord = new ScatterRecord();
             //half vector
             //scattered = new Ray(hitRecord.point, hitRecord.normal *0.5f + Exten.RandomHalfVecInSphere(), ray.time);
-            ONB uvw = new ONB(hitRecord.normal);
-            var nextDir = uvw.Local(Exten.RandomCosineDir());
+            //ONB uvw = new ONB(hitRecord.normal);
+            //var nextDir = uvw.Local(Exten.RandomCosineDir());
             //var nextDir = uvw.Local(Exten.RandomUniformCosineDir());
-            scattered = new Ray(hitRecord.point, nextDir, ray.time);
-            attenuation = color.sample(hitRecord.u,hitRecord.v,hitRecord.point);
-            pdf =  1.0f / (glm.dot(hitRecord.normal, nextDir) * MathF.PI);
+            //scattered = new Ray(hitRecord.point, nextDir, ray.time);
+            sRecord.attenuation = color.sample(hitRecord.u,hitRecord.v,hitRecord.point);
+            sRecord.pdf = CosinePDF.Default;
             return true;
         }
 
         public float Scatter_PDf(Ray ray, HitRecord hitRecord, Ray scattered)
         {
             return glm.dot(hitRecord.normal, scattered.direction) /MathF.PI;
+        }
+    }
+    class ConstPDF : PDF
+    {
+        private vec3 _reflected;
+
+        public ConstPDF(vec3 nextDir)
+        {
+            _reflected = nextDir;
+        }
+        public vec3 Generate(vec3 point, vec3 normal)
+        {
+            return _reflected;
+        }
+
+        public float Value(Ray ray, vec3 normal)
+        {
+            return 1;
+        }
+        public bool IsConst()
+        {
+            return true;
         }
     }
     class Metal : Material
@@ -111,9 +135,9 @@ namespace RT1
             color = c;
             fuzz = f;
         }
-        public bool Scatter(Ray ray, HitRecord hitRecord, out vec3 attenuation, out Ray scattered,out float pdf)
+        public bool Scatter(Ray ray, HitRecord hitRecord, out ScatterRecord sRecord)
         {
-            pdf = 1;
+            sRecord = new ScatterRecord();
             var normal = hitRecord.normal;
             var point = hitRecord.point;
             var reflected = Exten.reflect(ray.direction, normal);
@@ -121,8 +145,8 @@ namespace RT1
             {
                 reflected = reflected + fuzz * Exten.RandomVecInSphere();
             }
-            scattered = new Ray(point, reflected, ray.time);
-            attenuation = color;
+            sRecord.attenuation = color;
+            sRecord.pdf = new ConstPDF(reflected);
             return glm.dot(ray.direction, normal) < 0;
         }
         public vec3 Emitted(Ray ray, HitRecord hitRecord, float u, float v, vec3 pos)
@@ -151,11 +175,9 @@ namespace RT1
             return _text.sample(u, v, pos);
         }
 
-        public bool Scatter(Ray ray, HitRecord hitRecord, out vec3 attenuation, out Ray scattered,out float pdf)
+        public bool Scatter(Ray ray, HitRecord hitRecord, out ScatterRecord sRecord)
         {
-            scattered = null;
-            attenuation = new vec3();
-            pdf = 1;
+            sRecord = null;
             return false;
         }
 
@@ -189,12 +211,12 @@ namespace RT1
         {
             return new vec3(0, 0, 0);
         }
-        public bool Scatter(Ray ray, HitRecord hitRecord, out vec3 attenuation, out Ray scattered,out float pdf)
+        public bool Scatter(Ray ray, HitRecord hitRecord, out ScatterRecord sRecord)
         {
-            pdf = 1;
+            sRecord = new ScatterRecord();
             var normal = hitRecord.normal;
             var point = hitRecord.point;
-            attenuation = new vec3(1.0f, 1.0f, 1.0f);
+            sRecord.attenuation = new vec3(1.0f, 1.0f, 1.0f);
             float eta = ref_idx;
             var n = normal;
 
@@ -219,12 +241,13 @@ namespace RT1
             if (Exten.rand01() < prob)
             {
                 vec3 reflected = Exten.reflect(ray.direction, normal);
-                scattered = new Ray(point, reflected, ray.time);
+                sRecord.pdf = new ConstPDF(reflected);
             }
             else
             {
-                scattered = new Ray(point, r, ray.time);
+                sRecord.pdf = new ConstPDF(r);
             }
+
             return true;
 
         }
