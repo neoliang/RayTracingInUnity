@@ -38,7 +38,7 @@ namespace RT1
             {
                 Ray nextRay;
                 vec3 color;
-                var emmited = record.mat.Emitted(record.u, record.v, record.point);
+                var emmited = record.mat.Emitted(r,record, record.u, record.v, record.point);
                 float pdf = 1.0f;
                 if (depth < 50 && record.mat.Scatter(r, record, out color, out nextRay,out pdf))
                 {
@@ -215,7 +215,7 @@ namespace RT1
             Hitable[] hitables = new Hitable[8];
             hitables[i++] = new YZRect(555, 0, 555, 0, 555,green,true);
             hitables[i++] = new YZRect(0, 0, 555, 0, 555, red);
-            hitables[i++] = new XZRect(554, 213, 343, 227, 332, light);
+            hitables[i++] = new XZRect(554, 213, 343, 227, 332, light,true);
             hitables[i++] = new XZRect(0, 0, 555, 0, 555, white);
             hitables[i++] = new XZRect(555, 0, 555, 0, 555, white,true);
             hitables[i++] = new XYRect(555, 0, 555, 0, 555, white,true);

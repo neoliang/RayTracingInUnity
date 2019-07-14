@@ -13,7 +13,7 @@ namespace RT1
     {
         bool Scatter(Ray ray, HitRecord hitRecord, out vec3 attenuation, out Ray scattered,out float pdf);
         float Scatter_PDf(Ray ray, HitRecord hitRecord, Ray scattered);
-        vec3 Emitted(float u, float v, vec3 pos);
+        vec3 Emitted(Ray ray, HitRecord hitRecord, float u, float v, vec3 pos);
     }
     interface Texture
     {
@@ -73,9 +73,11 @@ namespace RT1
         {
             color = new SolidTexture(c);
         }
-        public vec3 Emitted(float u, float v, vec3 pos)
+
+
+        public vec3 Emitted(Ray ray, HitRecord hitRecord, float u, float v, vec3 pos)
         {
-            return new vec3(0,0,0);
+            return new vec3(0, 0, 0);
         }
 
         public bool Scatter(Ray ray, HitRecord hitRecord, out vec3 attenuation, out Ray scattered, out float pdf)
@@ -119,7 +121,7 @@ namespace RT1
             attenuation = color;
             return glm.dot(ray.direction, normal) < 0;
         }
-        public vec3 Emitted(float u, float v, vec3 pos)
+        public vec3 Emitted(Ray ray, HitRecord hitRecord, float u, float v, vec3 pos)
         {
             return new vec3(0, 0, 0);
         }
@@ -136,8 +138,12 @@ namespace RT1
         {
             _text = t;
         }
-        public vec3 Emitted(float u, float v, vec3 pos)
+        public vec3 Emitted(Ray ray, HitRecord hitRecord, float u, float v, vec3 pos)
         {
+            if(glm.dot(ray.direction,hitRecord.normal) > 0)
+            {
+                return  new vec3(0, 0, 0);
+            }
             return _text.sample(u, v, pos);
         }
 
@@ -175,7 +181,7 @@ namespace RT1
             float rp = (eta * cosi - cost) / (eta * cosi + cost);
             return (rs * rs + rp * rp) * 0.5f;
         }
-        public vec3 Emitted(float u, float v, vec3 pos)
+        public vec3 Emitted(Ray ray, HitRecord hitRecord, float u, float v, vec3 pos)
         {
             return new vec3(0, 0, 0);
         }
