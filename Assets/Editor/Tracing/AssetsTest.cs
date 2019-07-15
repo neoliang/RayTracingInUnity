@@ -32,6 +32,7 @@ namespace RT1
         static Sphere s4 = new Sphere(new vec3(-1, 0, -1), 0.5f, new Dieletric(2.4f));
         static Hitable scene = new HitList(new Hitable[] { s1, s2, s3, s4 });
         static PDF _lightPDf;
+        static PDF _spherePDF;
         static vec3 RayTracing(Ray r, int depth)
         {
             HitRecord record;
@@ -235,13 +236,16 @@ namespace RT1
             hitables[i++] = new XZRect(555, 0, 555, 0, 555, white,true);
             hitables[i++] = new XYRect(555, 0, 555, 0, 555, white,true);
 
-            Hitable box = new Box(new vec3(0, 0, 0), new vec3(165, 165, 165), aluminum);
-            box = new Tranlate(new RotateY(box, -18), new vec3(130, 0, 65));
-            hitables[i++] = box;
+            //Hitable box = new Box(new vec3(0, 0, 0), new vec3(165, 165, 165), white);
+            //box = new Tranlate(new RotateY(box, -18), new vec3(130, 0, 65));
+            //hitables[i++] = box;
+            Sphere sp = new Sphere(new vec3(190, 90.5f, 190), 90f, new Dieletric(1.5f));
+            hitables[i++] = sp;
             Hitable box2 = new Box(new vec3(0, 0, 0), new vec3(165, 330, 165), white);
             box2 = new Tranlate(new RotateY(box2, 15), new vec3(265, 0, 295));
             hitables[i++] = box2;
             _lightPDf = new LightPDF(lightRect);
+            _spherePDF = new SpherePDF(sp);
             return new HitList(hitables.Where(p=>p!=null).ToArray());
         }
 #if UNITY_EDITOR

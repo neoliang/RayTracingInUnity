@@ -128,6 +128,10 @@ namespace RT1
         {
             return rand01() * (t - f) + f;
         }
+        public static int rand(int min,int max)
+        {
+            return r.Next(min, max);
+        }
         public static float rand01()
         {
             return (float)r.NextDouble();

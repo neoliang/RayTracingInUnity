@@ -41,7 +41,40 @@ namespace RT1
 
         public static PDF Default = new CosinePDF();
     }
+    class SpherePDF : PDF
+    {
+        Sphere _sphere;
+        public SpherePDF(Sphere s)
+        {
+            _sphere = s;
+        }
+        public vec3 Generate(vec3 point, vec3 normal)
+        {
+            float r1 = Exten.rand01();
+            float r2 = Exten.rand01();
 
+            var pc = _sphere.GetCenter(0) - point;
+            float cosMax = 1 - 2.0f * (_sphere.radius * _sphere.radius) / glm.dot(pc, pc);
+            float z = 1 - r2 * (1 - cosMax);
+            float phi = r1 * 2.0f * MathF.PI;
+            float x = MathF.Cos(phi) * MathF.Sqrt(1 - z * z);
+            float y = MathF.Sin(phi) * MathF.Sqrt(1 - z * z);
+            ONB oNB = new ONB(glm.normalize(pc));
+            return oNB.Local(x, y, z);
+        }
+
+        public bool IsConst()
+        {
+            return false;
+        }
+
+        public float Value(Ray ray, vec3 normal)
+        {
+            var pc = _sphere.GetCenter(0) - ray.position;
+            float cosMax = 1 - 2.0f * (_sphere.radius * _sphere.radius) / glm.dot(pc, pc);
+            return 1.0f / ((1 - cosMax * cosMax) * MathF.PI);
+        }
+    }
     class LightPDF : PDF
     {
         //hard code 
@@ -80,26 +113,27 @@ namespace RT1
     }
     class MixPDF : PDF
     {
-        PDF _pdf1;
-        PDF _pdf2;
+        System.Collections.Generic.List<PDF> _pdfs;
 
-        public MixPDF(PDF pdf1,PDF pdf2)
+        public MixPDF(params PDF[] pDFs)
         {
-            _pdf1 = pdf1;
-            _pdf2 = pdf2;
+            _pdfs = new System.Collections.Generic.List<PDF>(pDFs);
         }
         public vec3 Generate(vec3 point, vec3 normal)
         {
-            if(Exten.rand01() <= 0.5)
-            {
-                return _pdf1.Generate(point,normal);
-            }
-            return _pdf2.Generate(point,normal);
+            var idx = Exten.rand(0, _pdfs.Count);
+            return _pdfs[idx].Generate(point, normal);
         }
 
         public float Value(Ray ray, vec3 normal)
         {
-            return 0.5f * _pdf1.Value(ray, normal) + 0.5f * _pdf2.Value(ray, normal);
+            float d = 1.0f / _pdfs.Count;
+            float v = 0;
+            for(int i = 0;i<_pdfs.Count;++i)
+            {
+                v += _pdfs[i].Value(ray, normal) * d;
+            }
+            return v;
         }
         public bool IsConst()
         {
