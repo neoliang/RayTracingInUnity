@@ -66,7 +66,7 @@ namespace RT1
                     var mixturePdf = sRecord.pdf;
                     if (!mixturePdf.IsConst())
                     {
-                        mixturePdf = new MixPDF(sRecord.pdf, _lightPDf);
+                        mixturePdf = new MixPDF(sRecord.pdf, _spherePDF, _spherePDF);
                     }
                     var nextdir = mixturePdf.Generate(record.point, record.normal);
                     nextRay = new Ray(record.point, nextdir, r.time);

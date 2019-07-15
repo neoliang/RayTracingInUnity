@@ -54,8 +54,8 @@ namespace RT1
             float r2 = Exten.rand01();
 
             var pc = _sphere.GetCenter(0) - point;
-            float cosMax = 1 - 2.0f * (_sphere.radius * _sphere.radius) / glm.dot(pc, pc);
-            float z = 1 - r2 * (1 - cosMax);
+            float cosMax = MathF.Sqrt(1 - _sphere.radius * _sphere.radius / glm.dot(pc, pc));
+            float z = 1 + r2 * (cosMax - 1);
             float phi = r1 * 2.0f * MathF.PI;
             float x = MathF.Cos(phi) * MathF.Sqrt(1 - z * z);
             float y = MathF.Sin(phi) * MathF.Sqrt(1 - z * z);
@@ -70,9 +70,14 @@ namespace RT1
 
         public float Value(Ray ray, vec3 normal)
         {
-            var pc = _sphere.GetCenter(0) - ray.position;
-            float cosMax = 1 - 2.0f * (_sphere.radius * _sphere.radius) / glm.dot(pc, pc);
-            return 1.0f / ((1 - cosMax * cosMax) * MathF.PI);
+            HitRecord record;
+            if (_sphere.Hit(ray,0.001f,100000,out record))
+            {
+                var pc = _sphere.GetCenter(0) - ray.position;
+                float cosMax = MathF.Sqrt(1 - _sphere.radius * _sphere.radius / glm.dot(pc, pc));
+                return 1.0f / ((1 - cosMax) * 2.0f * MathF.PI);
+            }
+            return 0;
         }
     }
     class LightPDF : PDF
@@ -121,19 +126,28 @@ namespace RT1
         }
         public vec3 Generate(vec3 point, vec3 normal)
         {
-            var idx = Exten.rand(0, _pdfs.Count);
-            return _pdfs[idx].Generate(point, normal);
+
+            var r = Exten.rand01();
+            if (r < 0.5f)
+            {
+                return _pdfs[0].Generate(point, normal);
+            }
+            else if (r < 0.75f)
+                return _pdfs[1].Generate(point, normal);
+            else
+                return _pdfs[2].Generate(point, normal);
         }
 
         public float Value(Ray ray, vec3 normal)
         {
-            float d = 1.0f / _pdfs.Count;
-            float v = 0;
-            for(int i = 0;i<_pdfs.Count;++i)
-            {
-                v += _pdfs[i].Value(ray, normal) * d;
-            }
-            return v;
+            return 0.5f * _pdfs[0].Value(ray, normal) + 0.25f * _pdfs[1].Value(ray, normal) * 0.25f * _pdfs[2].Value(ray,normal);
+            //float d = 1.0f / _pdfs.Count;
+            //float v = 0;
+            //for(int i = 0;i<_pdfs.Count;++i)
+            //{
+            //    v += _pdfs[i].Value(ray, normal) * d;
+            //}
+            //return v;
         }
         public bool IsConst()
         {
