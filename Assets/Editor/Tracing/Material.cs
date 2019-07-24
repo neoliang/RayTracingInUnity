@@ -135,6 +135,17 @@ namespace RT1
             color = c;
             fuzz = f;
         }
+        public  vec3 RandomCosineDir()
+        {
+            float r1 = Exten.rand01();
+            float r2 = Exten.rand01() / fuzz;
+            r2 = (float)Math.Pow(2.72, -r2*r2);
+            double z = Math.Sqrt(1 - r2);
+            double phi = 2 * Math.PI * r1;
+            double x = Math.Cos(phi) * Math.Sqrt(r2);
+            double y = Math.Sin(phi) * Math.Sqrt(r2);
+            return new vec3((float)x, (float)y, (float)z);
+        }
         public bool Scatter(Ray ray, HitRecord hitRecord, out ScatterRecord sRecord)
         {
             sRecord = new ScatterRecord();
@@ -143,7 +154,10 @@ namespace RT1
             var reflected = Exten.reflect(ray.direction, normal);
             if (fuzz > 0)
             {
-                reflected = reflected + fuzz * Exten.RandomVecInSphere();
+                ONB o = new ONB(reflected);
+                var next = RandomCosineDir();
+
+                reflected = o.Local(next);
             }
             sRecord.attenuation = color;
             sRecord.pdf = new ConstPDF(reflected);

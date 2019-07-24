@@ -64,10 +64,10 @@ namespace RT1
                     //}
 
                     var mixturePdf = sRecord.pdf;
-                    if (!mixturePdf.IsConst())
-                    {
-                        mixturePdf = new MixPDF(sRecord.pdf, _spherePDF, _spherePDF);
-                    }
+                    //if (!mixturePdf.IsConst())
+                    //{
+                    //    mixturePdf = new MixPDF(sRecord.pdf, _spherePDF, _spherePDF);
+                    //}
                     var nextdir = mixturePdf.Generate(record.point, record.normal);
                     nextRay = new Ray(record.point, nextdir, r.time);
                     float pdf = mixturePdf.Value(nextRay, record.normal); 
@@ -223,7 +223,7 @@ namespace RT1
             var red = new Lambertian(new vec3(0.65f, 0.05f, 0.05f));
             var white = new Lambertian(new vec3(0.73f, 0.73f, 0.73f));
             var green = new Lambertian(new vec3(0.12f, 0.45f, 0.15f));
-            Material aluminum = new Metal(new vec3(0.8f, 0.85f, 0.88f));
+            Material aluminum = new Metal(new vec3(0.8f, 0.85f, 0.88f),0.3f);
 
             var light = new DiffuseLight(new SolidTexture(new vec3(15, 15, 15)));
             int i = 0;
@@ -232,14 +232,14 @@ namespace RT1
             hitables[i++] = new YZRect(0, 0, 555, 0, 555, red);
             var lightRect = new XZRect(554, 213, 343, 227, 332, light, true);
             hitables[i++] = lightRect;
-            hitables[i++] = new XZRect(0, 0, 555, 0, 555, white);
+            hitables[i++] = new XZRect(0, 0, 555, 0, 555, aluminum);
             hitables[i++] = new XZRect(555, 0, 555, 0, 555, white,true);
             hitables[i++] = new XYRect(555, 0, 555, 0, 555, white,true);
 
             //Hitable box = new Box(new vec3(0, 0, 0), new vec3(165, 165, 165), white);
             //box = new Tranlate(new RotateY(box, -18), new vec3(130, 0, 65));
             //hitables[i++] = box;
-            Sphere sp = new Sphere(new vec3(190, 90.5f, 190), 90f, new Dieletric(1.5f));
+            Sphere sp = new Sphere(new vec3(190, 90.5f, 190), 90f, new Dieletric(1.6f));
             hitables[i++] = sp;
             Hitable box2 = new Box(new vec3(0, 0, 0), new vec3(165, 330, 165), white);
             box2 = new Tranlate(new RotateY(box2, 15), new vec3(265, 0, 295));
